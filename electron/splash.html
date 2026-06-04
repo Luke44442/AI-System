@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline'" />
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #080c14;
+    color: #e2e8f0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    user-select: none;
+    overflow: hidden;
+  }
+  .logo {
+    width: 56px; height: 56px;
+    background: linear-gradient(135deg, #7c3aed, #4f46e5);
+    border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 28px;
+    margin-bottom: 20px;
+    box-shadow: 0 0 40px rgba(124,58,237,0.4);
+  }
+  h1 { font-size: 24px; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 4px; }
+  .sub { font-size: 11px; color: #64748b; margin-bottom: 48px; }
+  .steps { width: 280px; space: 0; }
+  .step {
+    display: flex; align-items: center; gap: 12px;
+    padding: 8px 0;
+    font-size: 12px;
+    color: #475569;
+    transition: color 0.3s;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+  }
+  .step.active { color: #c4b5fd; }
+  .step.done   { color: #34d399; }
+  .step-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: #1e293b;
+    transition: background 0.3s;
+    flex-shrink: 0;
+  }
+  .step.active .step-dot { background: #7c3aed; animation: pulse 1s infinite; }
+  .step.done   .step-dot { background: #34d399; }
+  @keyframes pulse {
+    0%,100% { opacity:1; transform:scale(1); }
+    50%      { opacity:0.6; transform:scale(0.8); }
+  }
+  .bar-wrap {
+    width: 280px; height: 2px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 2px;
+    margin-top: 28px;
+    overflow: hidden;
+  }
+  .bar {
+    height: 100%;
+    background: linear-gradient(90deg, #7c3aed, #06b6d4);
+    border-radius: 2px;
+    width: 0%;
+    transition: width 0.5s ease;
+  }
+  .version { position: absolute; bottom: 16px; font-size: 10px; color: #1e293b; }
+</style>
+</head>
+<body>
+  <div class="logo">⚡</div>
+  <h1>GrowthIQ</h1>
+  <p class="sub">AI Growth & Opportunity Intelligence</p>
+
+  <div class="steps" id="steps">
+    <div class="step" id="s0"><div class="step-dot"></div> Initializing application</div>
+    <div class="step" id="s1"><div class="step-dot"></div> Starting database connection</div>
+    <div class="step" id="s2"><div class="step-dot"></div> Loading AI research engine</div>
+    <div class="step" id="s3"><div class="step-dot"></div> Starting web server</div>
+    <div class="step" id="s4"><div class="step-dot"></div> Checking network services</div>
+    <div class="step" id="s5"><div class="step-dot"></div> Ready</div>
+  </div>
+
+  <div class="bar-wrap"><div class="bar" id="bar"></div></div>
+  <p class="version">v1.0.0</p>
+
+  <script>
+    const steps = document.querySelectorAll('.step');
+    const bar = document.getElementById('bar');
+    const delays = [0, 800, 1600, 2400, 3200, 4000];
+    const total = delays.length;
+
+    delays.forEach((delay, i) => {
+      setTimeout(() => {
+        if (i > 0) steps[i - 1].classList.remove('active'), steps[i - 1].classList.add('done');
+        steps[i].classList.add('active');
+        bar.style.width = `${((i + 1) / total) * 100}%`;
+      }, delay);
+    });
+  </script>
+</body>
+</html>

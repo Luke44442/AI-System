@@ -1,0 +1,50 @@
+{
+  "name": "growthiq-desktop",
+  "version": "1.0.0",
+  "description": "GrowthIQ — AI Growth & Opportunity Intelligence",
+  "main": "main.js",
+  "scripts": {
+    "dev": "electron .",
+    "build:win": "electron-builder --win",
+    "build:mac": "electron-builder --mac",
+    "build:linux": "electron-builder --linux",
+    "build:all": "electron-builder --win --mac --linux"
+  },
+  "dependencies": {
+    "electron-store": "^8.2.0"
+  },
+  "devDependencies": {
+    "electron": "^33.3.1",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "com.growthiq.desktop",
+    "productName": "GrowthIQ",
+    "copyright": "Copyright © 2025 GrowthIQ",
+    "directories": { "output": "dist" },
+    "files": ["main.js", "preload.js", "splash.html", "node_modules/**/*"],
+    "extraResources": [
+      { "from": "../saas", "to": "app/saas", "filter": ["**/*", "!node_modules", "!.env*", "!*.log"] }
+    ],
+    "win": {
+      "target": [{ "target": "nsis", "arch": ["x64"] }],
+      "icon": "assets/icon.ico"
+    },
+    "mac": {
+      "target": [{ "target": "dmg", "arch": ["x64", "arm64"] }],
+      "icon": "assets/icon.icns",
+      "category": "public.app-category.productivity"
+    },
+    "linux": {
+      "target": ["AppImage"],
+      "icon": "assets/icon.png",
+      "category": "Office"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    }
+  }
+}
