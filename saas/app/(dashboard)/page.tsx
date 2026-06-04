@@ -5,6 +5,7 @@ import { UsageCard } from '@/components/dashboard/UsageCard';
 import { QuickResearch } from '@/components/dashboard/QuickResearch';
 import { RecentRuns } from '@/components/dashboard/RecentRuns';
 import { Zap, Target, FileText, TrendingUp } from 'lucide-react';
+import type { ComponentProps } from 'react';
 
 export default async function DashboardPage() {
   const session = await getAuthSession();
@@ -25,7 +26,7 @@ export default async function DashboardPage() {
 
   const limits = plan.limits;
 
-  const STATS = [
+  const STATS: ComponentProps<typeof UsageCard>[] = [
     {
       label: 'Research Runs',
       value: usage.research_run,

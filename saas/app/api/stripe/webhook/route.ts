@@ -57,7 +57,7 @@ export async function POST(req: Request) {
   try {
     switch (event.type) {
       case 'checkout.session.completed': {
-        const cs = event.data.object as Stripe.CheckoutSession;
+        const cs = event.data.object as Stripe.Checkout.Session;
         if (cs.subscription) {
           const sub = await stripe.subscriptions.retrieve(cs.subscription as string);
           await upsertSubscription(sub);

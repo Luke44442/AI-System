@@ -20,12 +20,13 @@ model User {
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 
-  accounts      Account[]
-  sessions      Session[]
-  subscription  Subscription?
-  workspaces    Workspace[]
-  usageLogs     UsageLog[]
-  researchRuns  ResearchRun[]
+  accounts         Account[]
+  sessions         Session[]
+  subscription     Subscription?
+  workspaces       Workspace[]
+  usageLogs        UsageLog[]
+  researchRuns     ResearchRun[]
+  ecommerceCycles  EcommerceCycle[]
 }
 
 model Account {
@@ -168,10 +169,131 @@ model Subscription {
 model UsageLog {
   id        String   @id @default(cuid())
   userId    String
-  action    String   // research_run | content_gen | opportunity_save
+  action    String   // research_run | content_gen | opportunity_save | ecommerce_cycle
   date      DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, date])
+}
+
+// ── E-commerce OS ──────────────────────────────────────────────────────────
+
+model EcommerceCycle {
+  id             String   @id @default(cuid())
+  userId         String
+  status         String   @default("running") // running | complete | error
+  focusNiche     String?
+  errorMessage   String?
+  approvalStatus String   @default("pending") // pending | approved | rejected
+
+  opportunities  ProductOpportunity[]
+  storeBlueprint StoreBlueprint?
+  marketingPlan  MarketingPlan?
+  approvalItems  ApprovalItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+}
+
+model ProductOpportunity {
+  id                 String   @id @default(cuid())
+  cycleId            String
+  rank               Int      @default(0)
+  name               String
+  description        String   @db.Text
+  category           String
+  productType        String   // digital | pod | service | physical
+  demandScore        Int
+  competitionLevel   String   // low | medium | high
+  competitionScore   Int
+  monetizationScore  Int
+  overallScore       Float
+  platforms          String[]
+  targetBuyer        String
+  priceRange         String
+  whyNow             String   @db.Text
+  validationDecision String?  // launch | test | reject
+  validationReason   String?  @db.Text
+  suggestedPrice     String?
+  differentiators    String[]
+  isTopPick          Boolean  @default(false)
+
+  cycle     EcommerceCycle @relation(fields: [cycleId], references: [id], onDelete: Cascade)
+  listings  ProductListing[]
+
+  createdAt DateTime @default(now())
+
+  @@index([cycleId, overallScore])
+}
+
+model StoreBlueprint {
+  id             String   @id @default(cuid())
+  cycleId        String   @unique
+  storeName      String
+  storeNameAlts  String[]
+  tagline        String
+  brandColors    String[]
+  brandTone      String
+  niche          String
+  positioning    String   @db.Text
+  productCatalog Json
+  launchChecklist Json
+  createdAt      DateTime @default(now())
+
+  cycle EcommerceCycle @relation(fields: [cycleId], references: [id], onDelete: Cascade)
+}
+
+model ProductListing {
+  id             String   @id @default(cuid())
+  opportunityId  String
+  productName    String
+  title          String
+  description    String   @db.Text
+  tags           String[]
+  keywords       String[]
+  price          String
+  bundleIdeas    String[]
+  seoNotes       String[]
+  designPrompts  String[]
+  fileSpecs      Json?
+  createdAt      DateTime @default(now())
+
+  opportunity ProductOpportunity @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
+
+  @@index([opportunityId])
+}
+
+model MarketingPlan {
+  id              String   @id @default(cuid())
+  cycleId         String   @unique
+  tiktokIdeas     Json
+  instagramIdeas  Json
+  hookScripts     Json
+  postingSchedule Json
+  launchStrategy  String   @db.Text
+  createdAt       DateTime @default(now())
+
+  cycle EcommerceCycle @relation(fields: [cycleId], references: [id], onDelete: Cascade)
+}
+
+model ApprovalItem {
+  id          String    @id @default(cuid())
+  cycleId     String
+  step        String    // setup_store | create_listing | publish | run_ads
+  title       String
+  description String    @db.Text
+  riskLevel   String    @default("low") // low | medium | high
+  instructions String   @db.Text
+  status      String    @default("pending") // pending | approved | rejected
+  approvedAt  DateTime?
+  createdAt   DateTime  @default(now())
+
+  cycle EcommerceCycle @relation(fields: [cycleId], references: [id], onDelete: Cascade)
+
+  @@index([cycleId, status])
 }
