@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI WEALTH SYSTEM — Command Center</title>
+  <link rel="stylesheet" href="/assets/css/style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+  <!-- SCANLINE OVERLAY -->
+  <div class="scanlines"></div>
+
+  <!-- HEADER -->
+  <header class="hud-header">
+    <div class="header-left">
+      <span class="sys-label">SYS://AI-WEALTH-SYSTEM</span>
+      <span class="version">v1.0.0</span>
+    </div>
+    <div class="header-center">
+      <h1 class="title glitch" data-text="AUTONOMOUS WEALTH ENGINE">AUTONOMOUS WEALTH ENGINE</h1>
+      <div class="subtitle">Multi-Agent AI Command Center</div>
+    </div>
+    <div class="header-right">
+      <div class="status-indicator" id="sys-status">
+        <span class="dot pulsing"></span>
+        <span id="status-text">ONLINE</span>
+      </div>
+      <div class="datetime" id="datetime"></div>
+    </div>
+  </header>
+
+  <!-- MAIN GRID -->
+  <main class="grid-layout">
+
+    <!-- ROW 1 ─ KPI BAR -->
+    <section class="kpi-bar">
+      <div class="kpi-card" id="kpi-revenue">
+        <div class="kpi-icon">$</div>
+        <div class="kpi-body">
+          <div class="kpi-label">TOTAL REVENUE</div>
+          <div class="kpi-value" id="val-revenue">$0.00</div>
+        </div>
+      </div>
+      <div class="kpi-card" id="kpi-profit">
+        <div class="kpi-icon">↑</div>
+        <div class="kpi-body">
+          <div class="kpi-label">NET PROFIT</div>
+          <div class="kpi-value" id="val-profit">$0.00</div>
+        </div>
+      </div>
+      <div class="kpi-card" id="kpi-opps">
+        <div class="kpi-icon">◈</div>
+        <div class="kpi-body">
+          <div class="kpi-label">OPPORTUNITIES</div>
+          <div class="kpi-value" id="val-opps">0</div>
+        </div>
+      </div>
+      <div class="kpi-card" id="kpi-agents">
+        <div class="kpi-icon">⬡</div>
+        <div class="kpi-body">
+          <div class="kpi-label">ACTIVE AGENTS</div>
+          <div class="kpi-value" id="val-agents">0 / 22</div>
+        </div>
+      </div>
+      <div class="kpi-card" id="kpi-cycle">
+        <div class="kpi-icon">⟳</div>
+        <div class="kpi-body">
+          <div class="kpi-label">CYCLE</div>
+          <div class="kpi-value" id="val-cycle">IDLE</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ROW 2 ─ LEFT: Agent Hierarchy | CENTER: CEO Console | RIGHT: Pipeline -->
+    <div class="row-2">
+
+      <!-- Agent Hierarchy -->
+      <section class="panel agent-panel">
+        <div class="panel-header">
+          <span class="panel-title">AGENT HIERARCHY</span>
+          <span class="panel-badge" id="agents-live">LIVE</span>
+        </div>
+        <div class="agent-tree" id="agent-tree">
+          <!-- Populated by JS -->
+        </div>
+      </section>
+
+      <!-- CEO Console -->
+      <section class="panel ceo-panel">
+        <div class="panel-header">
+          <span class="panel-title">SUPREME AGENT — CEO</span>
+          <span class="panel-badge gold">EXECUTIVE</span>
+        </div>
+        <div class="ceo-console">
+          <div class="ceo-objectives">
+            <div class="section-title">ACTIVE OBJECTIVES</div>
+            <ul id="ceo-objectives"></ul>
+          </div>
+          <div class="ceo-review">
+            <div class="section-title">LATEST REVIEW</div>
+            <div class="terminal-text" id="ceo-review">Awaiting CEO cycle...</div>
+          </div>
+          <div class="controls">
+            <button class="btn-cyber" onclick="startCycle()">▶ RUN CYCLE</button>
+            <button class="btn-cyber secondary" onclick="fetchDashboard()">⟳ REFRESH</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Opportunity Pipeline -->
+      <section class="panel pipeline-panel">
+        <div class="panel-header">
+          <span class="panel-title">OPPORTUNITY PIPELINE</span>
+          <span class="panel-badge cyan" id="pipeline-count">0</span>
+        </div>
+        <div class="pipeline-stages">
+          <div class="stage">
+            <div class="stage-label">PENDING</div>
+            <div class="stage-value" id="stage-pending">0</div>
+            <div class="stage-bar"><div class="stage-fill pending" id="bar-pending"></div></div>
+          </div>
+          <div class="stage">
+            <div class="stage-label">QUALIFIED</div>
+            <div class="stage-value" id="stage-qualified">0</div>
+            <div class="stage-bar"><div class="stage-fill qualified" id="bar-qualified"></div></div>
+          </div>
+          <div class="stage">
+            <div class="stage-label">APPROVED</div>
+            <div class="stage-value" id="stage-approved">0</div>
+            <div class="stage-bar"><div class="stage-fill approved" id="bar-approved"></div></div>
+          </div>
+        </div>
+        <div class="section-title mt-10">TOP OPPORTUNITIES</div>
+        <div id="top-opportunities" class="opp-list"></div>
+      </section>
+
+    </div>
+
+    <!-- ROW 3 ─ Revenue Chart | Agent Conversations | System Health -->
+    <div class="row-3">
+
+      <!-- Revenue Chart -->
+      <section class="panel chart-panel">
+        <div class="panel-header">
+          <span class="panel-title">REVENUE METRICS</span>
+          <span class="panel-badge green">FINANCE</span>
+        </div>
+        <canvas id="revenue-chart" height="180"></canvas>
+        <div class="finance-stats" id="finance-stats"></div>
+      </section>
+
+      <!-- Agent Conversations -->
+      <section class="panel logs-panel">
+        <div class="panel-header">
+          <span class="panel-title">AGENT ACTIVITY FEED</span>
+          <span class="panel-badge">LIVE</span>
+        </div>
+        <div class="log-feed" id="activity-feed">
+          <div class="log-entry sys">[ SYSTEM ] Awaiting agent activity...</div>
+        </div>
+      </section>
+
+      <!-- Research Discoveries -->
+      <section class="panel research-panel">
+        <div class="panel-header">
+          <span class="panel-title">RESEARCH DISCOVERIES</span>
+          <span class="panel-badge cyan">RESEARCH</span>
+        </div>
+        <div id="research-feed" class="research-list"></div>
+        <div class="section-title mt-10">KNOWLEDGE BASE</div>
+        <div class="kb-stats" id="kb-stats">
+          <span>Lessons: <strong id="kb-lessons">0</strong></span>
+          <span>Insights: <strong id="kb-insights">0</strong></span>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- ROW 4 ─ Department Metrics -->
+    <section class="dept-row">
+      <div class="dept-card" id="dept-research">
+        <div class="dept-name">RESEARCH</div>
+        <div class="dept-agents">5 agents</div>
+        <div class="dept-bar"><div class="dept-fill" id="fill-research"></div></div>
+        <div class="dept-status" id="status-research">STANDBY</div>
+      </div>
+      <div class="dept-card" id="dept-strategy">
+        <div class="dept-name">STRATEGY</div>
+        <div class="dept-agents">4 agents</div>
+        <div class="dept-bar"><div class="dept-fill" id="fill-strategy"></div></div>
+        <div class="dept-status" id="status-strategy">STANDBY</div>
+      </div>
+      <div class="dept-card" id="dept-execution">
+        <div class="dept-name">EXECUTION</div>
+        <div class="dept-agents">6 agents</div>
+        <div class="dept-bar"><div class="dept-fill" id="fill-execution"></div></div>
+        <div class="dept-status" id="status-execution">STANDBY</div>
+      </div>
+      <div class="dept-card" id="dept-finance">
+        <div class="dept-name">FINANCE</div>
+        <div class="dept-agents">3 agents</div>
+        <div class="dept-bar"><div class="dept-fill" id="fill-finance"></div></div>
+        <div class="dept-status" id="status-finance">STANDBY</div>
+      </div>
+      <div class="dept-card" id="dept-improvement">
+        <div class="dept-name">SELF-IMPROVE</div>
+        <div class="dept-agents">4 agents</div>
+        <div class="dept-bar"><div class="dept-fill" id="fill-improvement"></div></div>
+        <div class="dept-status" id="status-improvement">STANDBY</div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="hud-footer">
+    <span>AI WEALTH SYSTEM — AUTONOMOUS OPERATION MODE</span>
+    <span id="ws-status" class="ws-indicator">WS: CONNECTING</span>
+    <span>LEGAL & ETHICAL INCOME GENERATION ONLY</span>
+  </footer>
+
+  <script src="/assets/js/main.js"></script>
+</body>
+</html>
