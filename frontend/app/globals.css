@@ -1,0 +1,125 @@
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg-deep:     #070d1a;
+  --bg-mid:      #0d1b2e;
+  --bg-bright:   #122036;
+  --neon-blue:   #00c8ff;
+  --neon-purple: #9333ea;
+  --neon-green:  #00ff94;
+  --neon-amber:  #f59e0b;
+  --neon-red:    #ef4444;
+  --neon-pink:   #ec4899;
+
+  --font-orbitron:   'Orbitron', sans-serif;
+  --font-jetbrains:  'JetBrains Mono', monospace;
+  --font-inter:      'Inter', system-ui, sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+html {
+  background: var(--bg-deep);
+  color-scheme: dark;
+}
+
+body {
+  background: var(--bg-deep);
+  color: #e2e8f0;
+  font-family: var(--font-inter);
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+/* ── Custom scrollbar ─────────────────────────────────────────────── */
+::-webkit-scrollbar       { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(0,200,255,0.15); border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(0,200,255,0.3); }
+
+/* ── Selection ─────────────────────────────────────────────────────── */
+::selection { background: rgba(0,200,255,0.2); color: white; }
+
+/* ── Utilities ─────────────────────────────────────────────────────── */
+.font-orbitron { font-family: var(--font-orbitron) !important; }
+.font-mono     { font-family: var(--font-jetbrains) !important; }
+
+.bg-panel-gradient {
+  background: linear-gradient(135deg, rgba(13,27,46,0.9) 0%, rgba(7,13,26,0.95) 100%);
+}
+
+.scrollbar-thin::-webkit-scrollbar { width: 3px; }
+
+/* ── Neon text glow utilities ──────────────────────────────────────── */
+.text-glow-blue   { text-shadow: 0 0 12px rgba(0,200,255,0.6),  0 0 24px rgba(0,200,255,0.3); }
+.text-glow-green  { text-shadow: 0 0 12px rgba(0,255,148,0.6),  0 0 24px rgba(0,255,148,0.3); }
+.text-glow-purple { text-shadow: 0 0 12px rgba(147,51,234,0.6), 0 0 24px rgba(147,51,234,0.3); }
+.text-glow-amber  { text-shadow: 0 0 12px rgba(245,158,11,0.6), 0 0 24px rgba(245,158,11,0.3); }
+
+/* ── Scan line overlay ─────────────────────────────────────────────── */
+.scan-overlay {
+  position: fixed; inset: 0; pointer-events: none; z-index: 999;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0,0,0,0.04) 2px,
+    rgba(0,0,0,0.04) 4px
+  );
+}
+
+/* ── Corner decorations ─────────────────────────────────────────────── */
+.corner-tl::before,
+.corner-br::after {
+  content: '';
+  position: absolute;
+  width: 10px;
+  height: 10px;
+}
+.corner-tl::before {
+  top: 0; left: 0;
+  border-top: 1px solid rgba(0,200,255,0.3);
+  border-left: 1px solid rgba(0,200,255,0.3);
+}
+.corner-br::after {
+  bottom: 0; right: 0;
+  border-bottom: 1px solid rgba(0,200,255,0.15);
+  border-right: 1px solid rgba(0,200,255,0.15);
+}
+
+/* ── Animated border gradient ─────────────────────────────────────────── */
+.border-glow-animated {
+  position: relative;
+}
+.border-glow-animated::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(90deg, transparent, #00c8ff, #9333ea, #00c8ff, transparent);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  background-size: 200% 100%;
+  animation: borderFlow 3s linear infinite;
+}
+
+/* ── Loading shimmer ───────────────────────────────────────────────── */
+.shimmer {
+  background: linear-gradient(90deg, #0d1b2e 25%, #122036 50%, #0d1b2e 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+
+/* ── Recharts overrides ────────────────────────────────────────────── */
+.recharts-cartesian-grid line { opacity: 0.3 !important; }
+.recharts-tooltip-wrapper     { z-index: 50 !important; }
