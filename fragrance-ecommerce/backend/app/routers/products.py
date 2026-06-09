@@ -6,7 +6,8 @@ from sqlalchemy import func, select, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from app.database import get_db
-from app.models.product import Brand, Category, Product, ProductVariant, Collection, CollectionProduct
+from app.models.product import Brand, Category, Product, ProductVariant
+from app.models.marketplace import Collection, CollectionProduct
 from app.schemas.product import (
     BrandCreate, BrandUpdate, BrandResponse,
     CategoryCreate, CategoryResponse,
