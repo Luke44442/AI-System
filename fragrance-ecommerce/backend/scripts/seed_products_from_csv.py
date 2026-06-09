@@ -289,6 +289,249 @@ BRAND_META = {
 }
 
 # ---------------------------------------------------------------------------
+# Streetwear / Sneaker brand metadata (OrientDig supplier)
+# ---------------------------------------------------------------------------
+STREETWEAR_BRAND_META = {
+    "Nike": {
+        "is_luxury": False,
+        "slug": "nike",
+        "images": [
+            "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=800&q=80",
+            "https://images.unsplash.com/photo-1600269452121-4f2416e55c28?w=800&q=80",
+        ],
+    },
+    "Jordan": {
+        "is_luxury": False,
+        "slug": "jordan",
+        "images": [
+            "https://images.unsplash.com/photo-1607522370275-f14206abe5d3?w=800&q=80",
+            "https://images.unsplash.com/photo-1556906781-9a412961a28c?w=800&q=80",
+        ],
+    },
+    "Balenciaga": {
+        "is_luxury": True,
+        "slug": "balenciaga",
+        "images": [
+            "https://images.unsplash.com/photo-1549298916-b41d501d3772?w=800&q=80",
+        ],
+    },
+    "Rick Owens": {
+        "is_luxury": True,
+        "slug": "rick-owens",
+        "images": [
+            "https://images.unsplash.com/photo-1582588678413-dbf45f4823e9?w=800&q=80",
+        ],
+    },
+    "Louis Vuitton Bags": {
+        "is_luxury": True,
+        "slug": "louis-vuitton-bags",
+        "images": [
+            "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=800&q=80",
+            "https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=800&q=80",
+        ],
+    },
+    "Spider": {
+        "is_luxury": False,
+        "slug": "sp5der",
+        "images": [
+            "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=800&q=80",
+        ],
+    },
+    "Gallery Dept": {
+        "is_luxury": True,
+        "slug": "gallery-dept",
+        "images": [
+            "https://images.unsplash.com/photo-1523381294911-8d3cead13475?w=800&q=80",
+        ],
+    },
+    "Amiri": {
+        "is_luxury": True,
+        "slug": "amiri",
+        "images": [
+            "https://images.unsplash.com/photo-1596755389378-c31d21fd1273?w=800&q=80",
+        ],
+    },
+    "Essentials": {
+        "is_luxury": False,
+        "slug": "fear-of-god-essentials",
+        "images": [
+            "https://images.unsplash.com/photo-1556821840-3a63f15732ce?w=800&q=80",
+        ],
+    },
+    "Supreme": {
+        "is_luxury": False,
+        "slug": "supreme",
+        "images": [
+            "https://images.unsplash.com/photo-1529374255404-311a2a4f1fd9?w=800&q=80",
+        ],
+    },
+    "Stussy": {
+        "is_luxury": False,
+        "slug": "stussy",
+        "images": [
+            "https://images.unsplash.com/photo-1618354691373-d851c5c3a990?w=800&q=80",
+        ],
+    },
+    "Bape": {
+        "is_luxury": False,
+        "slug": "bape",
+        "images": [
+            "https://images.unsplash.com/photo-1565084888279-aca607ecce0c?w=800&q=80",
+        ],
+    },
+    "Trapstar": {
+        "is_luxury": False,
+        "slug": "trapstar",
+        "images": [
+            "https://images.unsplash.com/photo-1556821840-3a63f15732ce?w=800&q=80",
+        ],
+    },
+    "Off-White": {
+        "is_luxury": True,
+        "slug": "off-white",
+        "images": [
+            "https://images.unsplash.com/photo-1556905055-8f358a7a47b2?w=800&q=80",
+        ],
+    },
+    "Corteiz": {
+        "is_luxury": False,
+        "slug": "corteiz",
+        "images": [
+            "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=800&q=80",
+        ],
+    },
+    "Palace": {
+        "is_luxury": False,
+        "slug": "palace",
+        "images": [
+            "https://images.unsplash.com/photo-1529374255404-311a2a4f1fd9?w=800&q=80",
+        ],
+    },
+}
+
+# ---------------------------------------------------------------------------
+# Streetwear / Sneaker products from OrientDig CSV
+# Format: (brand, name, cost_str, product_type, category)
+# product_type: 'shoes' | 'clothing' | 'accessories'
+# ---------------------------------------------------------------------------
+STREETWEAR_PRODUCTS = [
+    # Nike Dunks
+    ("Nike", "Dunk Low Retro White Black Panda", "32.00", "shoes", "Sneakers"),
+    ("Nike", "Dunk Low Retro Black White", "32.00", "shoes", "Sneakers"),
+    ("Nike", "Dunk Low University Blue", "38.00", "shoes", "Sneakers"),
+    ("Nike", "Dunk Low Green Noise", "38.00", "shoes", "Sneakers"),
+    ("Nike", "Dunk Low Championship Red", "42.00", "shoes", "Sneakers"),
+    ("Nike", "Dunk Low Veneer", "42.00", "shoes", "Sneakers"),
+    ("Nike", "Dunk Low Retro Gorge Green", "42.00", "shoes", "Sneakers"),
+    ("Nike", "Dunk High Retro White Green Strike", "42.00", "shoes", "Sneakers"),
+    ("Nike", "Dunk High Retro Black White", "42.00", "shoes", "Sneakers"),
+    ("Nike", "Dunk Low Next Nature Hemp", "38.00", "shoes", "Sneakers"),
+    ("Nike", "Dunk Low Pale Ivory", "38.00", "shoes", "Sneakers"),
+    ("Nike", "Dunk Low Smoke Grey", "38.00", "shoes", "Sneakers"),
+    ("Nike", "Dunk Low Lemon Drop", "42.00", "shoes", "Sneakers"),
+    ("Nike", "Dunk Low SE 85", "42.00", "shoes", "Sneakers"),
+    ("Nike", "SB Dunk Low Pro", "45.00", "shoes", "Sneakers"),
+    ("Nike", "SB Dunk High Pro", "45.00", "shoes", "Sneakers"),
+    ("Nike", "Air Force 1 Low White", "32.00", "shoes", "Sneakers"),
+    ("Nike", "Air Force 1 Low Black", "32.00", "shoes", "Sneakers"),
+    ("Nike", "Air Force 1 Low Triple White", "35.00", "shoes", "Sneakers"),
+    ("Nike", "Air Max 90 White", "42.00", "shoes", "Sneakers"),
+    ("Nike", "Air Max 97 Silver Bullet", "55.00", "shoes", "Sneakers"),
+    ("Nike", "Air Max 1 Anniversary Red", "55.00", "shoes", "Sneakers"),
+    ("Nike", "Cortez White Black", "32.00", "shoes", "Sneakers"),
+    # Jordan
+    ("Jordan", "Air Jordan 4 Retro White Cement", "69.00", "shoes", "Sneakers"),
+    ("Jordan", "Air Jordan 4 Retro Black Cat", "69.00", "shoes", "Sneakers"),
+    ("Jordan", "Air Jordan 4 Retro Military Blue", "70.00", "shoes", "Sneakers"),
+    ("Jordan", "Air Jordan 4 Retro Fire Red", "70.00", "shoes", "Sneakers"),
+    ("Jordan", "Air Jordan 4 Retro Bred Reimagined", "70.00", "shoes", "Sneakers"),
+    ("Jordan", "Air Jordan 4 Retro Thunder", "70.00", "shoes", "Sneakers"),
+    ("Jordan", "Air Jordan 1 Retro High OG Chicago", "65.00", "shoes", "Sneakers"),
+    ("Jordan", "Air Jordan 1 Retro High OG Bred Toe", "65.00", "shoes", "Sneakers"),
+    ("Jordan", "Air Jordan 1 Low OG Shadow", "55.00", "shoes", "Sneakers"),
+    ("Jordan", "Air Jordan 3 Retro White Cement Reimagined", "65.00", "shoes", "Sneakers"),
+    ("Jordan", "Air Jordan 3 Retro Black Cement", "65.00", "shoes", "Sneakers"),
+    ("Jordan", "Air Jordan 11 Retro Cherry", "75.00", "shoes", "Sneakers"),
+    ("Jordan", "Air Jordan 11 Retro Bred", "75.00", "shoes", "Sneakers"),
+    # Balenciaga
+    ("Balenciaga", "Triple S Sneaker White", "73.00", "shoes", "Sneakers"),
+    ("Balenciaga", "Triple S Sneaker Black", "73.00", "shoes", "Sneakers"),
+    ("Balenciaga", "Track Runner Sneaker", "73.00", "shoes", "Sneakers"),
+    ("Balenciaga", "Speed Trainer Black", "65.00", "shoes", "Sneakers"),
+    # Rick Owens
+    ("Rick Owens", "Ramones Low Top Sneaker", "35.00", "shoes", "Sneakers"),
+    ("Rick Owens", "Geth Runner Sneaker", "35.00", "shoes", "Sneakers"),
+    ("Rick Owens", "DRKSHDW Detroit Sneaker", "35.00", "shoes", "Sneakers"),
+    # Louis Vuitton Bags
+    ("Louis Vuitton Bags", "Neverfull MM Monogram Tote", "103.00", "accessories", "Bags"),
+    ("Louis Vuitton Bags", "Speedy 30 Monogram", "85.00", "accessories", "Bags"),
+    ("Louis Vuitton Bags", "Speedy 25 Monogram", "78.00", "accessories", "Bags"),
+    ("Louis Vuitton Bags", "Alma PM Monogram", "95.00", "accessories", "Bags"),
+    ("Louis Vuitton Bags", "Pochette Accessories Monogram", "73.00", "accessories", "Bags"),
+    ("Louis Vuitton Bags", "Onthego GM Monogram", "103.00", "accessories", "Bags"),
+    ("Louis Vuitton Bags", "Keepall 55 Bandouliere Monogram", "103.00", "accessories", "Bags"),
+    # Spider Worldwide
+    ("Spider", "Worldwide Hoodie Black", "38.00", "clothing", "Hoodies"),
+    ("Spider", "Worldwide Hoodie White", "38.00", "clothing", "Hoodies"),
+    ("Spider", "Worldwide Hoodie Pink", "38.00", "clothing", "Hoodies"),
+    ("Spider", "Web Jogger Sweatpants Black", "35.00", "clothing", "Sweatpants"),
+    ("Spider", "Web Jogger Sweatpants Grey", "35.00", "clothing", "Sweatpants"),
+    ("Spider", "Worldwide Tee Black", "22.00", "clothing", "T-Shirts"),
+    ("Spider", "Worldwide Tee White", "22.00", "clothing", "T-Shirts"),
+    # Gallery Dept
+    ("Gallery Dept", "Painted Logo Hoodie", "55.00", "clothing", "Hoodies"),
+    ("Gallery Dept", "Art Dept Tee Vintage White", "35.00", "clothing", "T-Shirts"),
+    ("Gallery Dept", "Art Dept Tee Black", "35.00", "clothing", "T-Shirts"),
+    ("Gallery Dept", "Painted Flare Jeans Blue", "75.00", "clothing", "Jeans"),
+    # Amiri
+    ("Amiri", "MX1 Jeans Indigo", "85.00", "clothing", "Jeans"),
+    ("Amiri", "Shotgun Jeans Black", "85.00", "clothing", "Jeans"),
+    ("Amiri", "Core Logo Tee White", "42.00", "clothing", "T-Shirts"),
+    ("Amiri", "Core Logo Tee Black", "42.00", "clothing", "T-Shirts"),
+    # Fear of God Essentials
+    ("Essentials", "Pullover Hoodie Cream", "35.00", "clothing", "Hoodies"),
+    ("Essentials", "Pullover Hoodie Black", "35.00", "clothing", "Hoodies"),
+    ("Essentials", "Pullover Hoodie Grey", "35.00", "clothing", "Hoodies"),
+    ("Essentials", "Sweatpants Cream", "32.00", "clothing", "Sweatpants"),
+    ("Essentials", "Sweatpants Black", "32.00", "clothing", "Sweatpants"),
+    ("Essentials", "Tee Cream", "22.00", "clothing", "T-Shirts"),
+    ("Essentials", "Tee Black", "22.00", "clothing", "T-Shirts"),
+    # Supreme
+    ("Supreme", "Box Logo Hoodie Black", "55.00", "clothing", "Hoodies"),
+    ("Supreme", "Box Logo Hoodie Red", "55.00", "clothing", "Hoodies"),
+    ("Supreme", "Box Logo Tee White", "28.00", "clothing", "T-Shirts"),
+    ("Supreme", "Box Logo Tee Black", "28.00", "clothing", "T-Shirts"),
+    ("Supreme", "Embroidered Logo Crewneck Grey", "45.00", "clothing", "Sweatshirts"),
+    # Stussy
+    ("Stussy", "Basic Tee White", "18.00", "clothing", "T-Shirts"),
+    ("Stussy", "Basic Tee Black", "18.00", "clothing", "T-Shirts"),
+    ("Stussy", "8 Ball Hoodie Black", "38.00", "clothing", "Hoodies"),
+    ("Stussy", "Patterned Bucket Hat", "22.00", "clothing", "Hats"),
+    # Bape
+    ("Bape", "Shark Hoodie Zip-Up Blue Camo", "55.00", "clothing", "Hoodies"),
+    ("Bape", "Shark Hoodie Zip-Up Green Camo", "55.00", "clothing", "Hoodies"),
+    ("Bape", "ABC Camo Tee", "28.00", "clothing", "T-Shirts"),
+    ("Bape", "ABC Camo Hoodie", "50.00", "clothing", "Hoodies"),
+    # Trapstar
+    ("Trapstar", "Chenille Decoded Hoodie Black", "45.00", "clothing", "Hoodies"),
+    ("Trapstar", "Chenille Decoded Tracksuit Black", "85.00", "clothing", "Tracksuits"),
+    ("Trapstar", "Irongate T-Shirt Black", "25.00", "clothing", "T-Shirts"),
+    # Off-White
+    ("Off-White", "Diagonal Stripe Tee White", "45.00", "clothing", "T-Shirts"),
+    ("Off-White", "Diagonal Stripe Tee Black", "45.00", "clothing", "T-Shirts"),
+    ("Off-White", "Industrial Belt Hoodie", "65.00", "clothing", "Hoodies"),
+    # Corteiz
+    ("Corteiz", "Alcatraz Hoodie Black", "38.00", "clothing", "Hoodies"),
+    ("Corteiz", "Alcatraz Hoodie Grey", "38.00", "clothing", "Hoodies"),
+    ("Corteiz", "Rules The World Tee", "22.00", "clothing", "T-Shirts"),
+    ("Corteiz", "4Starz Cargo Pants", "48.00", "clothing", "Pants"),
+    # Palace
+    ("Palace", "Tri-Ferg Hoodie Blue", "42.00", "clothing", "Hoodies"),
+    ("Palace", "Tri-Ferg Tee White", "25.00", "clothing", "T-Shirts"),
+    ("Palace", "Tri-Ferg Tee Black", "25.00", "clothing", "T-Shirts"),
+]
+
+# ---------------------------------------------------------------------------
 # All products parsed from the Best Perfume Spreadsheet CSV
 # Format: (brand, name, cost_str)
 # ---------------------------------------------------------------------------
@@ -467,6 +710,8 @@ CSV_PRODUCTS = [
     ("Valentino", "Donna Born In Roma The Gold", "3.87"),
     ("Valentino", "Donna Born In Roma Yellow Dream", "3.87"),
     ("Valentino", "Donna Born In Roma Green Stravaganza", "3.87"),
+    ("Valentino", "Valentino Uomo Extreme", "3.87"),
+    ("Valentino", "Valentino Pour Femme", "3.87"),
     # Hermes
     ("Hermes", "Barenia", "9.43"),
     ("Hermes", "Terre d'Hermes", "6.96"),
@@ -489,6 +734,7 @@ CSV_PRODUCTS = [
     ("Chanel", "N°5 L'Eau", "6.46"),
     ("Chanel", "N°5 L'Eau Eau De Toilette", "9.34"),
     ("Chanel", "N°5", "6.46"),
+    ("Chanel", "N°6", "6.46"),
     # YSL
     ("YSL", "Mon Paris", "6.46"),
     ("YSL", "Black Opium", "6.46"),
@@ -533,6 +779,8 @@ CSV_PRODUCTS = [
     ("Byredo", "Open Sky", "6.74"),
     ("Byredo", "Mixed Emotions", "6.74"),
     ("Byredo", "Bibliotheque", "6.74"),
+    ("Byredo", "Lil Fleur", "6.74"),
+    ("Byredo", "Space Rage", "6.74"),
     # Maison Margiela
     ("Maison Margiela", "On A Date", "8.49"),
     ("Maison Margiela", "Autumn Vibes", "6.49"),
@@ -574,6 +822,14 @@ CSV_PRODUCTS = [
     ("L'Artisan", "Passage D'Enfer Extreme", "8.20"),
     ("L'Artisan", "Dzongkha", "8.20"),
     ("L'Artisan", "Memoire De Roses", "8.20"),
+    ("L'Artisan", "26 Tenebrae", "8.20"),
+    ("L'Artisan", "9 Arcana Rosa", "8.20"),
+    ("L'Artisan", "25 Obscuratio", "8.20"),
+    ("L'Artisan", "32 Venenum", "8.20"),
+    ("L'Artisan", "60 Mirabilis", "8.20"),
+    ("L'Artisan", "63 Crepusculum", "8.20"),
+    ("L'Artisan", "Il Etait Un Bois", "8.20"),
+    ("L'Artisan", "Un Air De Bretagne", "8.20"),
     # Dolce & Gabbana
     ("Dolce & Gabbana", "Light Blue", "7.74"),
     ("Dolce & Gabbana", "Q Eau De Parfum", "7.74"),
@@ -599,6 +855,8 @@ CSV_PRODUCTS = [
     ("Xerjoff", "Muse", "18.43"),
     ("Xerjoff", "Accento Overdose", "18.43"),
     ("Xerjoff", "Naxos", "18.43"),
+    ("Xerjoff", "Verde Accento", "18.43"),
+    ("Xerjoff", "Iommi Monkey Special", "18.43"),
     # Jean Paul Gaultier
     ("Jean Paul Gaultier", "Le Beau", "9.22"),
     ("Jean Paul Gaultier", "La Belle", "9.22"),
@@ -636,6 +894,7 @@ CSV_PRODUCTS = [
     ("Louis Vuitton", "Sur La Route", "20.12"),
     ("Louis Vuitton", "Dans La Peau", "20.12"),
     ("Louis Vuitton", "Contre Moi", "20.12"),
+    ("Louis Vuitton", "Orage", "20.12"),
     # Emporio Armani
     ("Emporio Armani", "In Love With You", "2.98"),
     ("Emporio Armani", "Because It's You", "2.98"),
@@ -687,6 +946,8 @@ CSV_PRODUCTS = [
     ("Carolina Herrera", "212 Vip Red", "10.06"),
     ("Carolina Herrera", "212 Heroes Forever Young", "10.06"),
     ("Carolina Herrera", "212 Sexy", "10.06"),
+    ("Carolina Herrera", "Bad Boy It's So Good To Be Bad", "8.51"),
+    ("Carolina Herrera", "Bad Boy", "8.51"),
     # Billie Eilish
     ("Billie Eilish", "Eau De Parfum", "10.06"),
     ("Billie Eilish", "Eau De Parfum No 2", "10.06"),
@@ -775,11 +1036,12 @@ def _pick_image(meta: dict, idx: int) -> str:
 
 
 SHIPPING = Decimal("8")
+STREETWEAR_SHIPPING = Decimal("12")
 
 
 async def seed():
     async with AsyncSessionLocal() as db:
-        # Ensure brands exist
+        # Ensure fragrance brands exist
         brand_map: dict[str, object] = {}
         for brand_name, meta in BRAND_META.items():
             from app.models.product import Brand
@@ -802,7 +1064,24 @@ async def seed():
                 print(f"  Brand created: {display_name}")
             brand_map[brand_name] = brand
 
-        # Get or create supplier
+        # Ensure streetwear brands exist
+        for brand_name, meta in STREETWEAR_BRAND_META.items():
+            from app.models.product import Brand
+            result = await db.execute(select(Brand).where(Brand.slug == meta["slug"]))
+            brand = result.scalar_one_or_none()
+            if not brand:
+                brand = Brand(
+                    name=brand_name,
+                    slug=meta["slug"],
+                    is_luxury=meta.get("is_luxury", False),
+                    is_active=True,
+                )
+                db.add(brand)
+                await db.flush()
+                print(f"  Brand created: {brand_name}")
+            brand_map[brand_name] = brand
+
+        # Get or create fragrance supplier
         from app.models.product import Supplier
         sup_result = await db.execute(select(Supplier).where(Supplier.slug == "perfume-resells"))
         supplier = sup_result.scalar_one_or_none()
@@ -817,6 +1096,22 @@ async def seed():
                 is_active=True,
             )
             db.add(supplier)
+            await db.flush()
+
+        # Get or create streetwear supplier
+        sw_sup_result = await db.execute(select(Supplier).where(Supplier.slug == "orient-dig"))
+        sw_supplier = sw_sup_result.scalar_one_or_none()
+        if not sw_supplier:
+            sw_supplier = Supplier(
+                name="OrientDig",
+                slug="orient-dig",
+                type="wholesale",
+                default_shipping_cost=Decimal("12"),
+                avg_processing_days=5,
+                avg_shipping_days=21,
+                is_active=True,
+            )
+            db.add(sw_supplier)
             await db.flush()
 
         added = 0
@@ -879,6 +1174,65 @@ async def seed():
                 seo_keywords=seo_keywords,
                 is_active=True,
                 is_featured=(cost >= Decimal("7")),
+                is_new_arrival=True,
+            )
+            db.add(product)
+            added += 1
+
+            if added % 50 == 0:
+                await db.flush()
+                print(f"  Flushed {added} products...")
+
+        # Seed streetwear / sneakers / accessories
+        for brand_name, raw_name, cost_str, product_type, style_cat in STREETWEAR_PRODUCTS:
+            sw_meta = STREETWEAR_BRAND_META.get(brand_name, {
+                "is_luxury": False,
+                "slug": brand_name.lower().replace(" ", "-"),
+                "images": [],
+            })
+
+            cost = Decimal(cost_str)
+            brand_obj = brand_map.get(brand_name)
+            brand_display = brand_name if brand_name != "Louis Vuitton Bags" else "Louis Vuitton"
+
+            slug_name = raw_name.lower().replace(" ", "-").replace("'", "").replace("/", "-")
+            slug = f"{sw_meta['slug']}-{slug_name}"[:200]
+
+            from app.models.product import Product
+            existing = await db.execute(select(Product).where(Product.slug == slug))
+            if existing.scalar_one_or_none():
+                skipped += 1
+                continue
+
+            website_price = calculate_website_price(cost, STREETWEAR_SHIPPING)
+            marketplace_price = calculate_marketplace_price(cost, STREETWEAR_SHIPPING)
+
+            idx = brand_counter.get(brand_name, 0)
+            brand_counter[brand_name] = idx + 1
+            image_url = _pick_image(sw_meta, idx)
+
+            product = Product(
+                sku=f"SW-{brand_display[:4].upper()}-{idx:04d}",
+                slug=slug,
+                name=raw_name,
+                brand_id=brand_obj.id if brand_obj else None,
+                supplier_id=sw_supplier.id,
+                concentration=None,
+                volume_ml=None,
+                gender="unisex",
+                fragrance_family=None,
+                supplier_cost=cost,
+                shipping_cost=STREETWEAR_SHIPPING,
+                website_price=website_price,
+                marketplace_price=marketplace_price,
+                inventory_status="in_stock",
+                inventory_quantity=30,
+                images=[{"url": image_url, "alt": f"{brand_display} {raw_name}", "is_primary": True}],
+                seo_title=f"{brand_display} {raw_name} | Scentara",
+                seo_description=f"Shop authentic {brand_display} {raw_name}. Premium quality {style_cat.lower()} at the best prices.",
+                seo_keywords=[brand_display.lower(), raw_name.lower(), style_cat.lower(), product_type],
+                is_active=True,
+                is_featured=(cost >= Decimal("50")),
                 is_new_arrival=True,
             )
             db.add(product)

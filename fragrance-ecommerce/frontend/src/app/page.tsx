@@ -3,6 +3,7 @@ import Image from "next/image";
 import type { Metadata } from "next";
 import { productsApi, collectionsApi } from "@/lib/api";
 import ProductCard from "@/components/product/ProductCard";
+import NewsletterForm from "@/components/NewsletterForm";
 import type { Product, Collection } from "@/types";
 
 export const metadata: Metadata = {
@@ -170,16 +171,7 @@ export default async function HomePage() {
           <p className="text-gray-400 mb-8 text-sm leading-relaxed">
             Be first to discover new arrivals, exclusive launches, and members-only discounts.
           </p>
-          <form className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
-            <input
-              type="email"
-              placeholder="Your email address"
-              className="flex-1 bg-transparent border-b border-gray-600 py-3 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-gold-500 transition-colors"
-            />
-            <button type="submit" className="btn-gold whitespace-nowrap text-xs">
-              Subscribe
-            </button>
-          </form>
+          <NewsletterForm />
           <p className="text-xs text-gray-600 mt-4">No spam. Unsubscribe anytime.</p>
         </div>
       </section>

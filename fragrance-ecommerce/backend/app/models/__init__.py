@@ -7,3 +7,10 @@ from app.models.marketplace import (  # noqa: F401
     ImportSession, Review, DiscountCode, AnalyticsEvent, MarketingContent,
     SystemConfig, Notification,
 )
+from app.models.analytics import (  # noqa: F401
+    SupplierCostHistory, OrderProfitability, KeywordRanking,
+    CompetitorPrice, PricingAlert,
+)
+from app.models.content import (  # noqa: F401
+    ProductEnrichment, ContentItem, TikTokContent, EmailSubscriber,
+)

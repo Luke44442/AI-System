@@ -66,7 +66,8 @@ export const brandsApi = {
 export const ordersApi = {
   create: (data: object) => api.post<Order>("/orders", data).then((r) => r.data),
   get: (id: string) => api.get<Order>(`/orders/${id}`).then((r) => r.data),
-  myOrders: (page = 1) => api.get<PaginatedResponse<Order>>("/orders/my", { params: { page } }).then((r) => r.data),
+  myOrders: (params: { page?: number; page_size?: number } = {}) =>
+    api.get<PaginatedResponse<Order>>("/orders/my", { params }).then((r) => r.data),
 };
 
 export const authApi = {
