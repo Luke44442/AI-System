@@ -3,6 +3,7 @@ import uuid
 from decimal import Decimal
 from typing import List, Optional
 from pydantic import BaseModel, Field, field_validator
+from app.core.sanitize import sanitize_str
 
 
 class BrandBase(BaseModel):
@@ -116,7 +117,14 @@ class ProductCreate(BaseModel):
     category_id: Optional[uuid.UUID] = None
     supplier_id: Optional[uuid.UUID] = None
     description: Optional[str] = None
-    short_description: Optional[str] = None
+    short_description: Optional[str] = Field(default=None, max_length=500)
+
+    @field_validator("description", "short_description", mode="before")
+    @classmethod
+    def sanitize_html(cls, v: object) -> object:
+        if isinstance(v, str):
+            return sanitize_str(v)
+        return v
     fragrance_family: Optional[str] = Field(default=None, max_length=100)
     concentration: Optional[str] = Field(default=None, max_length=50)
     gender: str = Field(default="unisex", max_length=20)

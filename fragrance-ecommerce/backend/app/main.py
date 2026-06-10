@@ -13,6 +13,7 @@ from starlette.responses import Response
 from app.config import settings
 from app.core.ratelimit import limiter
 from app.database import engine
+from app.middleware.security import SecurityHeadersMiddleware, AuditLogMiddleware
 
 log = structlog.get_logger(__name__)
 
@@ -43,13 +44,18 @@ def create_app() -> FastAPI:
     _app.state.limiter = limiter
     _app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
+    # Middleware executes in reverse registration order (last added = outermost).
+    # SecurityHeaders → AuditLog → CORS → route handler
     _app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.CORS_ORIGINS,
         allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
+        allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+        allow_headers=["Authorization", "Content-Type", "X-Request-ID"],
+        expose_headers=["X-Request-ID"],
     )
+    _app.add_middleware(AuditLogMiddleware)
+    _app.add_middleware(SecurityHeadersMiddleware)
 
     _register_routers(_app)
 

@@ -1,8 +1,22 @@
 from __future__ import annotations
+import re
 import uuid
 from decimal import Decimal
 from typing import List, Optional
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, field_validator
+
+
+def _validate_password_strength(v: str) -> str:
+    """Require ≥8 chars, at least one digit, one uppercase, one lowercase."""
+    if len(v) < 8:
+        raise ValueError("Password must be at least 8 characters")
+    if not re.search(r"[A-Z]", v):
+        raise ValueError("Password must contain at least one uppercase letter")
+    if not re.search(r"[a-z]", v):
+        raise ValueError("Password must contain at least one lowercase letter")
+    if not re.search(r"\d", v):
+        raise ValueError("Password must contain at least one digit")
+    return v
 
 
 class LoginRequest(BaseModel):
@@ -13,8 +27,13 @@ class LoginRequest(BaseModel):
 class RegisterRequest(BaseModel):
     email: EmailStr
     password: str = Field(min_length=8)
-    first_name: Optional[str] = None
-    last_name: Optional[str] = None
+    first_name: Optional[str] = Field(default=None, max_length=100)
+    last_name: Optional[str] = Field(default=None, max_length=100)
+
+    @field_validator("password")
+    @classmethod
+    def strong_password(cls, v: str) -> str:
+        return _validate_password_strength(v)
 
 
 class TokenResponse(BaseModel):
@@ -116,6 +135,11 @@ class ForgotPasswordRequest(BaseModel):
 class ResetPasswordRequest(BaseModel):
     token: str
     new_password: str = Field(min_length=8)
+
+    @field_validator("new_password")
+    @classmethod
+    def strong_password(cls, v: str) -> str:
+        return _validate_password_strength(v)
 
 
 class WishlistResponse(BaseModel):
