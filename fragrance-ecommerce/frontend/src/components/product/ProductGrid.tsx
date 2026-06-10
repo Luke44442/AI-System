@@ -35,7 +35,7 @@ export default function ProductGrid({ products, loading, className }: ProductGri
   if (!products.length) {
     return (
       <div className="flex flex-col items-center justify-center py-24 text-center">
-        <p className="font-serif text-2xl text-gray-300 mb-3">No fragrances found</p>
+        <p className="font-serif text-2xl text-gray-300 mb-3">No products found</p>
         <p className="text-sm text-gray-400">Try adjusting your filters</p>
       </div>
     );

@@ -31,14 +31,36 @@ export interface ProductParams {
   page_size?: number;
   search?: string;
   brand_id?: string;
+  brand_slug?: string;
   category_id?: string;
+  category_slug?: string;
   gender?: string;
   concentration?: string;
   is_featured?: boolean;
+  is_bestseller?: boolean;
   min_price?: number;
   max_price?: number;
+  /** JSON-encoded attribute filters, e.g. {"size":"10","colorway":"Panda"} */
+  attributes?: string;
   sort_by?: string;
   sort_dir?: "asc" | "desc";
+}
+
+export interface CategoryAttribute {
+  key: string;
+  label: string;
+  data_type: "string" | "number" | "enum" | "multi_enum" | "boolean";
+  options: string[];
+  unit: string | null;
+  is_filterable: boolean;
+  is_required: boolean;
+  is_variant_axis: boolean;
+  sort_order: number;
+}
+
+export interface CategoryAttributeSchema {
+  category: { id: string; name: string; slug: string; schema_type: string | null };
+  attributes: CategoryAttribute[];
 }
 
 export const productsApi = {
@@ -57,6 +79,8 @@ export const collectionsApi = {
 
 export const categoriesApi = {
   list: () => api.get<Category[]>("/categories").then((r) => r.data),
+  getAttributes: (slug: string) =>
+    api.get<CategoryAttributeSchema>(`/categories/${slug}/attributes`).then((r) => r.data),
 };
 
 export const brandsApi = {

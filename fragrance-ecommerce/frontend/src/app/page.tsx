@@ -77,6 +77,42 @@ export default async function HomePage() {
         </div>
       </section>
 
+      {/* Shop by Category */}
+      <section className="py-20 bg-white">
+        <div className="container-luxury">
+          <div className="text-center mb-12">
+            <p className="section-subtitle text-gold-600 mb-3">Explore</p>
+            <h2 className="section-title">Shop by Category</h2>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 lg:gap-6">
+            {[
+              { slug: "fragrances", label: "Fragrances", img: "https://images.unsplash.com/photo-1541643600914-78b084683601?w=600&q=80" },
+              { slug: "sneakers", label: "Sneakers", img: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600&q=80" },
+              { slug: "streetwear", label: "Streetwear", img: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=600&q=80" },
+              { slug: "designer-clothing", label: "Designer Clothing", img: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=600&q=80" },
+              { slug: "bags", label: "Bags", img: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=600&q=80" },
+              { slug: "watches", label: "Watches", img: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=600&q=80" },
+              { slug: "accessories", label: "Accessories", img: "https://images.unsplash.com/photo-1511499767150-a48a237f0083?w=600&q=80" },
+              { slug: "jewelry", label: "Jewelry", img: "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=600&q=80" },
+            ].map((cat) => (
+              <Link
+                key={cat.slug}
+                href={`/category/${cat.slug}`}
+                className="group relative aspect-square overflow-hidden bg-obsidian flex items-end p-5"
+              >
+                <Image
+                  src={cat.img}
+                  alt={cat.label}
+                  fill
+                  className="object-cover opacity-70 group-hover:opacity-50 group-hover:scale-105 transition-all duration-700"
+                />
+                <span className="relative z-10 font-serif text-xl text-white">{cat.label}</span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Featured Products */}
       {featuredProducts.length > 0 && (
         <section className="py-20 bg-cream">

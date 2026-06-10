@@ -7,11 +7,12 @@ import { useAuthStore } from "@/stores/auth";
 import { cn } from "@/lib/utils";
 
 const NAV_LINKS = [
-  { href: "/products", label: "All Fragrances" },
-  { href: "/collections", label: "Collections" },
-  { href: "/products?gender=male", label: "For Him" },
-  { href: "/products?gender=female", label: "For Her" },
-  { href: "/products?is_featured=true", label: "Featured" },
+  { href: "/category/fragrances", label: "Fragrances" },
+  { href: "/category/sneakers", label: "Sneakers" },
+  { href: "/category/streetwear", label: "Streetwear" },
+  { href: "/category/bags", label: "Bags" },
+  { href: "/category/watches", label: "Watches" },
+  { href: "/products", label: "Shop All" },
 ];
 
 export default function Navbar() {

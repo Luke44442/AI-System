@@ -12,6 +12,9 @@ export interface Category {
   slug: string;
   description?: string;
   image_url?: string;
+  icon?: string;
+  attribute_schema_type?: string;
+  is_featured?: boolean;
   product_count: number;
   children?: Category[];
 }
@@ -35,6 +38,12 @@ export interface Product {
   brand?: Brand;
   brand_id?: string;
   category_id?: string;
+  product_type?: string;
+  style_category?: string;
+  attributes?: Record<string, string>;
+  size_options?: string[];
+  color_options?: string[];
+  material?: string;
   description?: string;
   short_description?: string;
   fragrance_family?: string;
