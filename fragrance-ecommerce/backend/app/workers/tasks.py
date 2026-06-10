@@ -160,25 +160,59 @@ def process_order_fulfillment(self, order_id: str):
     async def _run():
         from app.database import AsyncSessionLocal
         from app.models.order import Order
+        from app.services.fulfillment import process_paid_order
         from sqlalchemy import select
         from sqlalchemy.orm import selectinload
         import uuid
 
         async with AsyncSessionLocal() as db:
             result = await db.execute(
-                select(Order).where(Order.id == uuid.UUID(order_id)).options(selectinload(Order.items))
+                select(Order).where(Order.id == uuid.UUID(order_id))
+                .options(selectinload(Order.items), selectinload(Order.customer))
             )
             order = result.scalar_one_or_none()
             if not order:
                 return {"error": "Order not found"}
-
-            logger.info(f"Processing fulfillment for order {order.order_number}")
-            return {"order_id": order_id, "status": "fulfillment_queued"}
+            return await process_paid_order(db, order)
 
     try:
         return _run_async(_run())
     except Exception as exc:
         raise self.retry(exc=exc)
+
+
+@celery_app.task(bind=True, max_retries=2, default_retry_delay=300)
+def sync_supplier_costs_task(self, supplier_slug: str):
+    async def _run():
+        from app.database import AsyncSessionLocal
+        from app.services.supplier_sync import sync_supplier_costs
+        async with AsyncSessionLocal() as db:
+            return await sync_supplier_costs(db, supplier_slug)
+
+    try:
+        return _run_async(_run())
+    except Exception as exc:
+        logger.error(f"Supplier sync failed for {supplier_slug}: {exc}")
+        raise self.retry(exc=exc)
+
+
+@celery_app.task
+def sync_all_suppliers():
+    """Fan out cost-sync across all active suppliers that have a client."""
+    async def _list_suppliers():
+        from app.database import AsyncSessionLocal
+        from app.models.product import Supplier
+        from sqlalchemy import select
+        async with AsyncSessionLocal() as db:
+            rows = await db.execute(select(Supplier.slug).where(Supplier.is_active == True))  # noqa: E712
+            return [r[0] for r in rows]
+
+    slugs = _run_async(_list_suppliers())
+    dispatched = []
+    for slug in slugs:
+        sync_supplier_costs_task.delay(slug)
+        dispatched.append(slug)
+    return {"dispatched": dispatched}
 
 
 @celery_app.task

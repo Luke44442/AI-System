@@ -120,3 +120,57 @@ async def update_order(order_id: uuid.UUID, payload: OrderUpdate, db: AsyncSessi
     await db.commit()
     await db.refresh(order)
     return order
+
+
+# ---------------------------------------------------------------------------
+# Fulfillment (admin)
+# ---------------------------------------------------------------------------
+from pydantic import BaseModel  # noqa: E402
+from app.services.fulfillment import process_paid_order, assign_tracking  # noqa: E402
+
+
+class TrackingRequest(BaseModel):
+    tracking_number: str
+    carrier: str | None = None
+    tracking_url: str | None = None
+
+
+@router.get("/fulfillment/queue", response_model=PaginatedResponse[OrderListItem], dependencies=[Depends(get_current_admin)])
+async def fulfillment_queue(
+    pagination: PaginationParams = Depends(get_pagination),
+    db: AsyncSession = Depends(get_db),
+):
+    """Paid orders awaiting fulfillment or tracking."""
+    base = select(Order).where(
+        Order.payment_status == "paid",
+        Order.fulfillment_status.in_(["unfulfilled", "processing"]),
+    )
+    total = (await db.execute(select(func.count()).select_from(base.subquery()))).scalar_one()
+    rows = await db.execute(
+        base.order_by(Order.created_at.asc()).offset(pagination.offset).limit(pagination.page_size)
+    )
+    return PaginatedResponse.create(rows.scalars().all(), total, pagination.page, pagination.page_size)
+
+
+@router.post("/{order_id}/fulfill", dependencies=[Depends(get_current_admin)])
+async def run_fulfillment(order_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(
+        select(Order).where(Order.id == order_id)
+        .options(selectinload(Order.items), selectinload(Order.customer))
+    )
+    order = result.scalar_one_or_none()
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+    return await process_paid_order(db, order)
+
+
+@router.post("/{order_id}/tracking", dependencies=[Depends(get_current_admin)])
+async def set_tracking(order_id: uuid.UUID, payload: TrackingRequest, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(
+        select(Order).where(Order.id == order_id)
+        .options(selectinload(Order.items), selectinload(Order.customer))
+    )
+    order = result.scalar_one_or_none()
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+    return await assign_tracking(db, order, payload.tracking_number, payload.carrier, payload.tracking_url)

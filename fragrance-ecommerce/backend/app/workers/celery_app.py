@@ -37,5 +37,9 @@ celery_app.conf.update(
             "task": "app.workers.tasks.generate_sitemap",
             "schedule": crontab(minute=0, hour=2),
         },
+        "sync-supplier-costs": {
+            "task": "app.workers.tasks.sync_all_suppliers",
+            "schedule": crontab(minute=0, hour="*/12"),
+        },
     },
 )

@@ -254,7 +254,10 @@ async def stripe_webhook(request: Request, db: AsyncSession = Depends(get_db)):
         pi = event["data"]["object"]
         order_id = pi.get("metadata", {}).get("order_id")
         if order_id:
-            result = await db.execute(select(Order).where(Order.id == uuid.UUID(order_id)))
+            result = await db.execute(
+                select(Order).where(Order.id == uuid.UUID(order_id))
+                .options(selectinload(Order.items), selectinload(Order.customer))
+            )
             order = result.scalar_one_or_none()
             if order:
                 order.status = "confirmed"
@@ -262,6 +265,13 @@ async def stripe_webhook(request: Request, db: AsyncSession = Depends(get_db)):
                 order.payment_intent_id = pi["id"]
                 await db.commit()
                 log.info("order_payment_confirmed", order_id=order_id)
+                # Kick off the automated fulfillment pipeline (assign supplier,
+                # record profitability, notify customer).
+                try:
+                    from app.services.fulfillment import process_paid_order
+                    await process_paid_order(db, order)
+                except Exception as exc:  # never fail the webhook on fulfillment errors
+                    log.error("fulfillment_failed", order_id=order_id, error=str(exc))
 
     elif event["type"] == "payment_intent.payment_failed":
         pi = event["data"]["object"]
