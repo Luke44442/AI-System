@@ -43,9 +43,12 @@ class MarketplaceListing(BaseModel):
     title: Mapped[Optional[str]] = mapped_column(String(500))
     description: Mapped[Optional[str]] = mapped_column(Text)
     price: Mapped[Optional[Decimal]] = mapped_column(Numeric(10, 2))
+    compare_at_price: Mapped[Optional[Decimal]] = mapped_column(Numeric(10, 2))
     quantity: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     platform_data: Mapped[Optional[dict]] = mapped_column(JSON, default=dict)
+    sync_errors: Mapped[Optional[list]] = mapped_column(JSON, default=list)
     last_synced_at: Mapped[Optional[str]] = mapped_column(String(50))
+    next_sync_at: Mapped[Optional[str]] = mapped_column(String(50))
     sync_error: Mapped[Optional[str]] = mapped_column(Text)
     product: Mapped["Product"] = relationship("Product", back_populates="marketplace_listings")  # type: ignore[name-defined]  # noqa: F821
     def __repr__(self) -> str: return f"<MarketplaceListing platform={self.platform!r} status={self.status!r}>"

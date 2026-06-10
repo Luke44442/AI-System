@@ -7,6 +7,7 @@ from sqlalchemy import cast, func, select, or_
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
+from app.config import settings
 from app.database import get_db
 from app.models.product import Brand, Category, CategoryAttribute, Product, ProductVariant
 from app.models.marketplace import Collection, CollectionProduct
@@ -210,6 +211,15 @@ async def create_product(payload: ProductCreate, db: AsyncSession = Depends(get_
     db.add(product)
     await db.commit()
     await db.refresh(product)
+    # Auto-post new active products to all configured marketplaces (best-effort,
+    # via background task so the API response isn't blocked on external APIs).
+    if product.is_active and settings.ENABLE_MARKETPLACE_SYNC:
+        try:
+            from app.workers.tasks import sync_product_to_marketplaces_task
+            sync_product_to_marketplaces_task.delay(str(product.id))
+        except Exception as exc:  # broker unavailable / dev mode — don't fail the request
+            import structlog
+            structlog.get_logger(__name__).warning("auto_marketplace_sync_skipped", error=str(exc))
     return product
 
 

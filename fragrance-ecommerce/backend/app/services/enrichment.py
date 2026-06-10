@@ -279,6 +279,69 @@ async def enrich_by_category(
     return await enrich_generic(schema_type or "luxury product", brand, name, attributes)
 
 
+# Columns that ProductEnrichment accepts — used to filter LLM output safely.
+_ENRICHMENT_FIELDS = {
+    "top_notes", "middle_notes", "base_notes", "fragrance_family",
+    "season_spring", "season_summer", "season_fall", "season_winter",
+    "occasion_casual", "occasion_formal", "occasion_evening", "occasion_office",
+    "occasion_outdoor", "occasion_sport",
+    "longevity_score", "projection_score", "uniqueness_score", "value_score",
+    "similar_fragrances", "alternative_recommendations",
+    "ai_description", "ai_short_description", "tiktok_hook",
+}
+_LIST_FIELDS = {"top_notes", "middle_notes", "base_notes",
+                "similar_fragrances", "alternative_recommendations"}
+
+
+def _product_schema_type(product) -> str:
+    """Derive the enrichment schema type from a Product ORM object."""
+    pt = (getattr(product, "product_type", None) or "").lower()
+    mapping = {"fragrance": "fragrance", "shoes": "sneakers", "sneakers": "sneakers",
+               "clothing": "clothing", "accessories": "accessories", "bags": "bags",
+               "watches": "watches", "jewelry": "jewelry"}
+    if pt in mapping:
+        return mapping[pt]
+    # Fragrance signal: has a concentration.
+    return "fragrance" if getattr(product, "concentration", None) else "accessories"
+
+
+async def generate_product_enrichment(product) -> dict:
+    """High-level entrypoint used by the enrichment router.
+
+    Dispatches to the category-appropriate generator and returns a dict
+    containing ONLY valid ProductEnrichment columns (plus ai_generated_at), so
+    the result can be spread straight into the ORM model.
+    """
+    from datetime import datetime, timezone
+
+    schema_type = _product_schema_type(product)
+    brand = product.brand.name if getattr(product, "brand", None) else ""
+    raw = await enrich_by_category(
+        schema_type,
+        brand,
+        product.name,
+        attributes=getattr(product, "attributes", None) or {},
+        concentration=getattr(product, "concentration", "") or "",
+        fragrance_family=getattr(product, "fragrance_family", "") or "",
+        gender=getattr(product, "gender", "unisex") or "unisex",
+    )
+
+    # Non-fragrance enrichers return styling fields with no dedicated columns;
+    # fold the useful bits into alternative_recommendations so nothing is lost.
+    extras = []
+    for key in ("outfit_pairings", "style_tags", "pairing_recommendations", "usage_recommendations"):
+        if raw.get(key):
+            extras.append({key: raw[key]})
+
+    data = {k: v for k, v in raw.items() if k in _ENRICHMENT_FIELDS}
+    for f in _LIST_FIELDS:
+        data.setdefault(f, [])
+    if extras and not data.get("alternative_recommendations"):
+        data["alternative_recommendations"] = extras
+    data["ai_generated_at"] = datetime.now(timezone.utc)
+    return data
+
+
 async def generate_tiktok_content(
     brand: str,
     name: str,

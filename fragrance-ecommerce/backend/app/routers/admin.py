@@ -58,26 +58,28 @@ async def analytics_overview(
     db: AsyncSession = Depends(get_db),
     _=Depends(get_current_admin),
 ):
-    interval_map = {"7d": "7 days", "30d": "30 days", "90d": "90 days"}
-    interval = interval_map.get(period, "7 days")
+    # Map the period to an integer day count and bind it as a parameter
+    # (cast to an interval inside SQL) — no string interpolation.
+    days_map = {"7d": 7, "30d": 30, "90d": 90}
+    days = days_map.get(period, 7)
 
     revenue = await db.execute(
-        text(f"""
+        text("""
             SELECT DATE(created_at) as date, SUM(total) as revenue, COUNT(*) as orders
             FROM orders
             WHERE payment_status = 'paid'
-              AND created_at >= NOW() - INTERVAL '{interval}'
+              AND created_at >= NOW() - (:days * INTERVAL '1 day')
             GROUP BY DATE(created_at)
             ORDER BY date
-        """)
+        """).bindparams(days=days)
     )
     by_channel = await db.execute(
-        text(f"""
+        text("""
             SELECT channel, COUNT(*) as orders, SUM(total) as revenue
             FROM orders
-            WHERE created_at >= NOW() - INTERVAL '{interval}'
+            WHERE created_at >= NOW() - (:days * INTERVAL '1 day')
             GROUP BY channel
-        """)
+        """).bindparams(days=days)
     )
 
     return {

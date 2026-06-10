@@ -1,15 +1,50 @@
 from __future__ import annotations
 import uuid
+from decimal import Decimal
+from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
+from pydantic import BaseModel
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 from app.database import get_db
 from app.models.marketplace import MarketplaceListing, DiscountCode, Review
+from app.models.product import Product
 from app.schemas.common import PaginatedResponse, PaginationParams, SuccessResponse
 from app.core.auth import get_current_admin
 from app.core.dependencies import get_pagination
 
 router = APIRouter(prefix="/marketplace", tags=["marketplace"])
+
+
+# ---------------------------------------------------------------------------
+# Marketplace sync + monitoring (admin)
+# ---------------------------------------------------------------------------
+@router.get("/status", dependencies=[Depends(get_current_admin)])
+async def marketplace_status(db: AsyncSession = Depends(get_db)):
+    """Per-platform configuration, capabilities, listing counts, and failures."""
+    from app.services.marketplaces.service import sync_health
+    return await sync_health(db)
+
+
+@router.post("/sync/{product_id}", dependencies=[Depends(get_current_admin)])
+async def sync_product(product_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
+    """Post/update a single product across all configured marketplaces now."""
+    from app.services.marketplaces.service import sync_product_all
+    result = await db.execute(
+        select(Product).where(Product.id == product_id).options(selectinload(Product.brand))
+    )
+    product = result.scalar_one_or_none()
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
+    return {"product_id": str(product_id), "results": await sync_product_all(db, product)}
+
+
+@router.post("/sync-all", dependencies=[Depends(get_current_admin)])
+async def sync_all(db: AsyncSession = Depends(get_db)):
+    """Trigger a full catalog sync to all configured marketplaces (runs inline)."""
+    from app.services.marketplaces.service import sync_all_active_products
+    return await sync_all_active_products(db)
 
 
 @router.get("/listings", dependencies=[Depends(get_current_admin)])
@@ -37,16 +72,23 @@ async def list_listings(
     )
 
 
+class UpdateListingRequest(BaseModel):
+    status: Optional[str] = None
+    listing_id: Optional[str] = None
+    listing_url: Optional[str] = None
+    price: Optional[Decimal] = None
+    title: Optional[str] = None
+    description: Optional[str] = None
+
+
 @router.patch("/listings/{listing_id}", dependencies=[Depends(get_current_admin)])
-async def update_listing(listing_id: uuid.UUID, payload: dict, db: AsyncSession = Depends(get_db)):
+async def update_listing(listing_id: uuid.UUID, payload: UpdateListingRequest, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(MarketplaceListing).where(MarketplaceListing.id == listing_id))
     listing = result.scalar_one_or_none()
     if not listing:
         raise HTTPException(status_code=404, detail="Listing not found")
-    allowed = {"status", "listing_id", "listing_url", "price", "title", "description"}
-    for k, v in payload.items():
-        if k in allowed:
-            setattr(listing, k, v)
+    for k, v in payload.model_dump(exclude_none=True).items():
+        setattr(listing, k, v)
     await db.commit()
     return SuccessResponse(message="Listing updated")
 

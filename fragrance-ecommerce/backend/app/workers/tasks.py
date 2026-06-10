@@ -66,8 +66,46 @@ def generate_ai_listing_task(self, product_id: str, platform: str = "website"):
 
 @celery_app.task(bind=True, max_retries=3, default_retry_delay=120)
 def sync_all_marketplace_listings(self):
-    logger.info("Running marketplace listing sync")
-    return {"status": "sync_scheduled"}
+    async def _run():
+        from app.database import AsyncSessionLocal
+        from app.services.marketplaces.service import sync_all_active_products
+        async with AsyncSessionLocal() as db:
+            return await sync_all_active_products(db)
+
+    try:
+        result = _run_async(_run())
+        logger.info(f"Marketplace sync complete: {result}")
+        return result
+    except Exception as exc:
+        logger.error(f"Marketplace sync failed: {exc}")
+        raise self.retry(exc=exc)
+
+
+@celery_app.task(bind=True, max_retries=3, default_retry_delay=60)
+def sync_product_to_marketplaces_task(self, product_id: str):
+    """Auto-post a single product to all configured marketplaces."""
+    async def _run():
+        from app.database import AsyncSessionLocal
+        from app.models.product import Product
+        from app.services.marketplaces.service import sync_product_all
+        from sqlalchemy import select
+        from sqlalchemy.orm import selectinload
+        import uuid
+
+        async with AsyncSessionLocal() as db:
+            result = await db.execute(
+                select(Product).where(Product.id == uuid.UUID(product_id)).options(selectinload(Product.brand))
+            )
+            product = result.scalar_one_or_none()
+            if not product:
+                return {"error": "Product not found"}
+            return await sync_product_all(db, product)
+
+    try:
+        return _run_async(_run())
+    except Exception as exc:
+        logger.error(f"Product marketplace sync failed for {product_id}: {exc}")
+        raise self.retry(exc=exc)
 
 
 @celery_app.task
