@@ -100,6 +100,23 @@ export const authApi = {
   register: (email: string, password: string, first_name?: string, last_name?: string) =>
     api.post("/auth/register", { email, password, first_name, last_name }).then((r) => r.data),
   me: () => api.get<Customer>("/customers/me").then((r) => r.data),
+  forgotPassword: (email: string) =>
+    api.post("/auth/forgot-password", { email }).then((r) => r.data),
+  resetPassword: (token: string, new_password: string) =>
+    api.post("/auth/reset-password", { token, new_password }).then((r) => r.data),
+};
+
+export interface CheckoutLineItem { product_id: string; quantity: number }
+export interface OrderQuote {
+  subtotal: number; shipping: number; tax: number; discount: number; total: number;
+  discount_valid?: boolean; discount_message?: string | null;
+}
+
+export const checkoutApi = {
+  quote: (items: CheckoutLineItem[], shipping_address?: object, discount_code?: string) =>
+    api.post<OrderQuote>("/checkout/quote", { items, shipping_address, discount_code }).then((r) => r.data),
+  createPaymentIntent: (payload: object) =>
+    api.post("/checkout/create-payment-intent", payload).then((r) => r.data),
 };
 
 export const wishlistApi = {

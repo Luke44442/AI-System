@@ -105,6 +105,19 @@ class AddToCartRequest(BaseModel):
     quantity: int = Field(default=1, ge=1)
 
 
+class UpdateCartItemRequest(BaseModel):
+    quantity: int = Field(ge=0)
+
+
+class ForgotPasswordRequest(BaseModel):
+    email: str
+
+
+class ResetPasswordRequest(BaseModel):
+    token: str
+    new_password: str = Field(min_length=8)
+
+
 class WishlistResponse(BaseModel):
     id: uuid.UUID
     customer_id: uuid.UUID

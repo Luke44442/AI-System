@@ -1,8 +1,9 @@
 from __future__ import annotations
 import uuid
+from datetime import datetime
 from decimal import Decimal
 from typing import List, Optional
-from sqlalchemy import Boolean, ForeignKey, Integer, JSON, Numeric, String, Text, UniqueConstraint
+from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, JSON, Numeric, String, Text, UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.models.base import BaseModel
@@ -20,6 +21,9 @@ class Customer(BaseModel):
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     is_verified: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     is_admin: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    password_reset_token: Mapped[Optional[str]] = mapped_column(String(255), index=True)
+    password_reset_expires: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
+    email_verify_token: Mapped[Optional[str]] = mapped_column(String(255), index=True)
     marketing_consent: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     order_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     total_spent: Mapped[Decimal] = mapped_column(Numeric(12, 2), default=0, nullable=False)
@@ -78,3 +82,4 @@ class Wishlist(BaseModel):
     customer_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("customers.id", ondelete="CASCADE"), nullable=False, index=True)
     product_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("products.id", ondelete="CASCADE"), nullable=False)
     customer: Mapped["Customer"] = relationship("Customer", back_populates="wishlists")
+    product: Mapped[Optional["Product"]] = relationship("Product", lazy="selectin")  # type: ignore[name-defined]  # noqa: F821

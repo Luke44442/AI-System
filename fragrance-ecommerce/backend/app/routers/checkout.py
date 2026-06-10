@@ -13,6 +13,8 @@ from app.database import get_db
 from app.models.product import Product
 from app.models.order import Order, OrderItem
 from app.core.auth import get_optional_user
+from app.services.tax import calculate_tax
+from app.services.discount import resolve_discount, DiscountError
 import structlog
 
 log = structlog.get_logger(__name__)
@@ -31,6 +33,7 @@ class CreatePaymentIntentRequest(BaseModel):
     items: List[CartLineItem]
     shipping_address: Optional[dict] = None
     customer_email: Optional[str] = None
+    discount_code: Optional[str] = None
 
 
 class PaymentIntentResponse(BaseModel):
@@ -39,6 +42,11 @@ class PaymentIntentResponse(BaseModel):
     currency: str
     order_id: str
     order_number: str
+    subtotal: float
+    shipping: float
+    tax: float
+    discount: float
+    total: float
 
 
 @router.post("/create-payment-intent", response_model=PaymentIntentResponse)
@@ -80,9 +88,21 @@ async def create_payment_intent(
             "supplier_cost": (product.supplier_cost or Decimal("0")) * line.quantity,
         })
 
-    shipping_amount = Decimal("9.99") if subtotal < Decimal("150") else Decimal("0")
-    total = subtotal + shipping_amount
-    amount_cents = int(total * 100)
+    # Apply discount code (if any) against the merchandise subtotal.
+    discount_amount = Decimal("0")
+    discount_obj = None
+    if payload.discount_code:
+        try:
+            discount_obj, discount_amount = await resolve_discount(db, payload.discount_code, subtotal)
+        except DiscountError as exc:
+            raise HTTPException(status_code=400, detail=str(exc))
+
+    discounted_subtotal = subtotal - discount_amount
+    shipping_amount = Decimal("9.99") if discounted_subtotal < Decimal("150") else Decimal("0")
+    # Tax is destination-based on the post-discount merchandise subtotal.
+    tax_amount = calculate_tax(discounted_subtotal, payload.shipping_address)
+    total = discounted_subtotal + shipping_amount + tax_amount
+    amount_cents = int((total * 100).to_integral_value())
 
     customer_email = (
         payload.customer_email
@@ -91,13 +111,14 @@ async def create_payment_intent(
     )
 
     order = Order(
-        order_number=f"SCN-{uuid.uuid4().hex[:8].upper()}",
+        order_number=f"AUR-{uuid.uuid4().hex[:8].upper()}",
         customer_id=current_user.id if current_user else None,
         guest_email=customer_email if not current_user else None,
         subtotal=subtotal,
         shipping_amount=shipping_amount,
-        tax_amount=Decimal("0"),
-        discount_amount=Decimal("0"),
+        tax_amount=tax_amount,
+        discount_amount=discount_amount,
+        discount_code=payload.discount_code if discount_obj else None,
         total=total,
         currency="USD",
         status="pending_payment",
@@ -127,7 +148,12 @@ async def create_payment_intent(
         supplier_cost_total += item_data["supplier_cost"]
 
     order.supplier_cost_total = supplier_cost_total
-    order.profit_amount = total - supplier_cost_total - shipping_amount
+    # Profit excludes pass-through tax; tax is collected and remitted, not margin.
+    order.profit_amount = discounted_subtotal - supplier_cost_total
+
+    # Reserve discount usage at order creation.
+    if discount_obj is not None:
+        discount_obj.usage_count = (discount_obj.usage_count or 0) + 1
 
     try:
         intent = stripe.PaymentIntent.create(
@@ -149,10 +175,66 @@ async def create_payment_intent(
             currency="usd",
             order_id=str(order.id),
             order_number=order.order_number,
+            subtotal=float(subtotal),
+            shipping=float(shipping_amount),
+            tax=float(tax_amount),
+            discount=float(discount_amount),
+            total=float(total),
         )
     except stripe.StripeError as e:
         log.error("stripe_error", error=str(e))
         raise HTTPException(status_code=502, detail=f"Payment processing error: {str(e)}")
+
+
+class QuoteResponse(BaseModel):
+    subtotal: float
+    shipping: float
+    tax: float
+    discount: float
+    total: float
+    discount_valid: bool
+    discount_message: Optional[str] = None
+
+
+@router.post("/quote", response_model=QuoteResponse)
+async def quote(payload: CreatePaymentIntentRequest, db: AsyncSession = Depends(get_db)):
+    """Compute an order price breakdown (subtotal, shipping, tax, discount) with no side effects."""
+    product_ids = [item.product_id for item in payload.items]
+    result = await db.execute(
+        select(Product).where(Product.id.in_(product_ids), Product.is_active == True)
+    )
+    products_by_id = {p.id: p for p in result.scalars().all()}
+
+    subtotal = Decimal("0")
+    for line in payload.items:
+        product = products_by_id.get(line.product_id)
+        if product:
+            subtotal += (product.website_price or Decimal("0")) * line.quantity
+
+    discount_amount = Decimal("0")
+    discount_valid = False
+    discount_message: Optional[str] = None
+    if payload.discount_code:
+        try:
+            _, discount_amount = await resolve_discount(db, payload.discount_code, subtotal)
+            discount_valid = True
+        except DiscountError as exc:
+            discount_message = str(exc)
+
+    discounted_subtotal = subtotal - discount_amount
+    shipping_amount = Decimal("9.99") if discounted_subtotal < Decimal("150") else Decimal("0")
+    tax_amount = calculate_tax(discounted_subtotal, payload.shipping_address)
+    total = discounted_subtotal + shipping_amount + tax_amount
+
+    return QuoteResponse(
+        subtotal=float(subtotal),
+        shipping=float(shipping_amount),
+        tax=float(tax_amount),
+        discount=float(discount_amount),
+        total=float(total),
+        discount_valid=discount_valid,
+        discount_message=discount_message,
+    )
 
 
 @router.post("/webhook")

@@ -11,7 +11,7 @@ import {
 } from '@stripe/react-stripe-js'
 import { useCartStore } from '@/stores/cart'
 import { formatPrice } from '@/lib/utils'
-import { api } from '@/lib/api'
+import { api, checkoutApi, type OrderQuote } from '@/lib/api'
 import toast from 'react-hot-toast'
 import Link from 'next/link'
 
@@ -128,13 +128,51 @@ export default function CheckoutPage() {
     country: 'US',
   })
 
+  const [discountCode, setDiscountCode] = useState('')
+  const [appliedCode, setAppliedCode] = useState('')
+  const [quote, setQuote] = useState<OrderQuote | null>(null)
+
   const cartTotal = totalFn()
   const shippingCost = cartTotal < 150 ? 9.99 : 0
-  const orderTotal = cartTotal + shippingCost
+  // Prefer the server quote (includes tax + validated discount) once available.
+  const orderTotal = quote?.total ?? cartTotal + shippingCost
 
   useEffect(() => {
     if (items.length === 0) router.push('/products')
   }, [items, router])
+
+  const lineItems = useCallback(
+    () => items.map((item) => ({ product_id: item.product.id, quantity: item.quantity })),
+    [items]
+  )
+
+  // Refresh the price quote (tax + discount) when the destination or code changes.
+  const refreshQuote = useCallback(async (code?: string) => {
+    if (items.length === 0) return
+    try {
+      const q = await checkoutApi.quote(
+        lineItems(),
+        { state: shipping.state, country: shipping.country, postal_code: shipping.postal_code },
+        code ?? appliedCode ?? undefined,
+      )
+      setQuote(q)
+      if (code !== undefined) {
+        if (q.discount_valid) toast.success('Discount applied')
+        else if (q.discount_message) toast.error(q.discount_message)
+      }
+    } catch {
+      /* keep local estimate */
+    }
+  }, [items, lineItems, shipping.state, shipping.country, shipping.postal_code, appliedCode])
+
+  useEffect(() => { refreshQuote() }, [refreshQuote])
+
+  const applyDiscount = async () => {
+    const code = discountCode.trim()
+    if (!code) return
+    setAppliedCode(code)
+    await refreshQuote(code)
+  }
 
   const handleShippingSubmit = useCallback(
     async (e: React.FormEvent) => {
@@ -147,6 +185,7 @@ export default function CheckoutPage() {
             quantity: item.quantity,
           })),
           customer_email: shipping.email,
+          discount_code: appliedCode || undefined,
           shipping_address: {
             first_name: shipping.first_name,
             last_name: shipping.last_name,
@@ -171,7 +210,7 @@ export default function CheckoutPage() {
         setLoading(false)
       }
     },
-    [items, shipping]
+    [items, shipping, appliedCode]
   )
 
   if (items.length === 0) {
@@ -344,17 +383,40 @@ export default function CheckoutPage() {
                 })}
               </div>
 
-              <div className="border-t border-obsidian-700 pt-4 space-y-2">
+              {/* Discount code */}
+              <div className="border-t border-obsidian-700 pt-4">
+                <div className="flex gap-2">
+                  <input
+                    value={discountCode}
+                    onChange={(e) => setDiscountCode(e.target.value)}
+                    placeholder="Discount code"
+                    className="flex-1 bg-obsidian-900 border border-obsidian-700 rounded px-3 py-2 text-sm text-cream placeholder-obsidian-500 focus:outline-none focus:border-gold-500 uppercase"
+                  />
+                  <button onClick={applyDiscount} type="button" className="btn-outline px-4 py-2 text-xs">Apply</button>
+                </div>
+              </div>
+
+              <div className="border-t border-obsidian-700 pt-4 mt-4 space-y-2">
                 <div className="flex justify-between text-sm text-obsidian-300">
                   <span>Subtotal</span>
-                  <span>{formatPrice(cartTotal)}</span>
+                  <span>{formatPrice(quote?.subtotal ?? cartTotal)}</span>
                 </div>
+                {quote && quote.discount > 0 && (
+                  <div className="flex justify-between text-sm text-green-400">
+                    <span>Discount{appliedCode ? ` (${appliedCode})` : ''}</span>
+                    <span>−{formatPrice(quote.discount)}</span>
+                  </div>
+                )}
                 <div className="flex justify-between text-sm text-obsidian-300">
                   <span>Shipping</span>
-                  <span>{shippingCost === 0 ? <span className="text-gold-400">FREE</span> : formatPrice(shippingCost)}</span>
+                  <span>{(quote?.shipping ?? shippingCost) === 0 ? <span className="text-gold-400">FREE</span> : formatPrice(quote?.shipping ?? shippingCost)}</span>
                 </div>
-                {cartTotal < 150 && (
-                  <p className="text-xs text-obsidian-400">Add {formatPrice(150 - cartTotal)} for free shipping</p>
+                <div className="flex justify-between text-sm text-obsidian-300">
+                  <span>Tax{!shipping.state ? ' (est. at next step)' : ''}</span>
+                  <span>{formatPrice(quote?.tax ?? 0)}</span>
+                </div>
+                {(quote?.subtotal ?? cartTotal) < 150 && (
+                  <p className="text-xs text-obsidian-400">Add {formatPrice(150 - (quote?.subtotal ?? cartTotal))} for free shipping</p>
                 )}
                 <div className="flex justify-between font-semibold text-cream border-t border-obsidian-700 pt-2 mt-2">
                   <span>Total</span>
