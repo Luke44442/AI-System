@@ -4,6 +4,8 @@ import type { Metadata } from "next";
 import { productsApi, collectionsApi } from "@/lib/api";
 import ProductCard from "@/components/product/ProductCard";
 import NewsletterForm from "@/components/NewsletterForm";
+import RecommendationRow from "@/components/product/RecommendationRow";
+import { recommendationsApi } from "@/lib/api";
 import type { Product, Collection } from "@/types";
 
 export const metadata: Metadata = {
@@ -134,6 +136,17 @@ export default async function HomePage() {
           </div>
         </section>
       )}
+
+      {/* Trending Now */}
+      <section className="py-12 bg-cream">
+        <div className="container-luxury">
+          <RecommendationRow
+            title="Trending Now"
+            subtitle="What Aurevia shoppers are loving"
+            load={() => recommendationsApi.trending(8)}
+          />
+        </div>
+      </section>
 
       {/* Collections */}
       {collections.length > 0 && (

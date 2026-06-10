@@ -125,6 +125,34 @@ export const wishlistApi = {
   remove: (productId: string) => api.delete(`/customers/me/wishlist/${productId}`).then((r) => r.data),
 };
 
+interface ItemsResponse { items: Product[] }
+
+export const recommendationsApi = {
+  similar: (productId: string, limit = 8) =>
+    api.get<ItemsResponse>(`/recommendations/similar/${productId}`, { params: { limit } }).then((r) => r.data.items),
+  frequentlyBoughtTogether: (productId: string, limit = 4) =>
+    api.get<ItemsResponse>(`/recommendations/frequently-bought-together/${productId}`, { params: { limit } }).then((r) => r.data.items),
+  completeTheLook: (productId: string, limit = 6) =>
+    api.get<ItemsResponse>(`/recommendations/complete-the-look/${productId}`, { params: { limit } }).then((r) => r.data.items),
+  trending: (limit = 12, category_slug?: string) =>
+    api.get<ItemsResponse>(`/recommendations/trending`, { params: { limit, category_slug } }).then((r) => r.data.items),
+  bestsellers: (limit = 12, category_slug?: string) =>
+    api.get<ItemsResponse>(`/recommendations/bestsellers`, { params: { limit, category_slug } }).then((r) => r.data.items),
+  recentlyViewed: (product_ids: string[]) =>
+    api.post<ItemsResponse>(`/recommendations/recently-viewed`, { product_ids }).then((r) => r.data.items),
+};
+
+export interface AssistantResponse {
+  message: string;
+  intent: Record<string, unknown>;
+  items: Product[];
+}
+
+export const assistantApi = {
+  recommend: (query: string, limit = 12) =>
+    api.post<AssistantResponse>(`/assistant/recommend`, { query, limit }).then((r) => r.data),
+};
+
 export const discountApi = {
   validate: (code: string, orderTotal: number) =>
     api.post("/marketplace/discount-codes/validate", null, { params: { code, order_total: orderTotal } }).then((r) => r.data),

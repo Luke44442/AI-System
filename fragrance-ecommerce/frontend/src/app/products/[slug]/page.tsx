@@ -5,6 +5,7 @@ import Link from "next/link";
 import { productsApi } from "@/lib/api";
 import { getProductImage, formatPrice, concentrationLabel } from "@/lib/utils";
 import AddToCartButton from "./AddToCartButton";
+import ProductRecommendations from "./ProductRecommendations";
 
 interface Props { params: { slug: string } }
 
@@ -211,6 +212,10 @@ export default async function ProductPage({ params }: Props) {
             </div>
           </div>
         </div>
+      </div>
+
+      <div className="container-luxury pb-16">
+        <ProductRecommendations productId={product.id} />
       </div>
     </div>
   );

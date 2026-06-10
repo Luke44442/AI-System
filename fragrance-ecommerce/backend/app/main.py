@@ -77,6 +77,7 @@ def _register_routers(_app: FastAPI) -> None:
         from app.routers import (
             products, orders, marketplace, admin, import_router, customers,
             checkout, enrichment, analytics_router, email_router,
+            recommendations,
         )
         _app.include_router(products.router, prefix=prefix)
         _app.include_router(products.brands_router, prefix=prefix)
@@ -92,6 +93,8 @@ def _register_routers(_app: FastAPI) -> None:
         _app.include_router(enrichment.router, prefix=prefix)
         _app.include_router(analytics_router.router, prefix=prefix)
         _app.include_router(email_router.router, prefix=prefix)
+        _app.include_router(recommendations.router, prefix=prefix)
+        _app.include_router(recommendations.assistant_router, prefix=prefix)
     except ImportError as exc:
         log.warning("router_import_skipped", reason=str(exc))
 

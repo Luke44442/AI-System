@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import { ShoppingBagIcon, MagnifyingGlassIcon, UserIcon, HeartIcon, Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
+import { ShoppingBagIcon, MagnifyingGlassIcon, UserIcon, HeartIcon, Bars3Icon, XMarkIcon, SparklesIcon } from "@heroicons/react/24/outline";
 import { useCartStore } from "@/stores/cart";
 import { useAuthStore } from "@/stores/auth";
 import { cn } from "@/lib/utils";
@@ -56,6 +56,10 @@ export default function Navbar() {
         </ul>
 
         <div className="flex items-center gap-4">
+          <Link href="/assistant" title="AI Stylist" className="hidden sm:flex items-center gap-1 p-2 text-gold-500 hover:text-gold-400 transition-colors">
+            <SparklesIcon className="w-5 h-5" />
+            <span className="text-[10px] tracking-widest uppercase hidden md:inline">Stylist</span>
+          </Link>
           <Link href="/search" className="hidden sm:block p-2 hover:text-gold-500 transition-colors">
             <MagnifyingGlassIcon className="w-5 h-5" />
           </Link>
