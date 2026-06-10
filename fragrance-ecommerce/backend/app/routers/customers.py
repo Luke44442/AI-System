@@ -2,11 +2,12 @@ from __future__ import annotations
 import secrets
 import uuid
 from datetime import datetime, timedelta, timezone
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from app.config import settings
+from app.core.ratelimit import limiter
 from app.database import get_db
 from app.models.customer import Customer, CustomerAddress, Cart, CartItem, Wishlist
 from app.models.product import Product
@@ -39,7 +40,8 @@ async def _get_or_create_cart(db: AsyncSession, customer: Customer) -> Cart:
 
 
 @auth_router.post("/register", response_model=TokenResponse, status_code=201)
-async def register(payload: RegisterRequest, db: AsyncSession = Depends(get_db)):
+@limiter.limit("10/minute")
+async def register(request: Request, payload: RegisterRequest, db: AsyncSession = Depends(get_db)):
     existing = await db.execute(select(Customer).where(Customer.email == payload.email))
     if existing.scalar_one_or_none():
         raise HTTPException(status_code=400, detail="Email already registered")
@@ -62,7 +64,8 @@ async def register(payload: RegisterRequest, db: AsyncSession = Depends(get_db))
 
 
 @auth_router.post("/forgot-password", response_model=SuccessResponse)
-async def forgot_password(payload: ForgotPasswordRequest, db: AsyncSession = Depends(get_db)):
+@limiter.limit("5/minute")
+async def forgot_password(request: Request, payload: ForgotPasswordRequest, db: AsyncSession = Depends(get_db)):
     """Issue a password reset token. Always returns success to avoid user enumeration."""
     result = await db.execute(select(Customer).where(Customer.email == payload.email.lower().strip()))
     customer = result.scalar_one_or_none()
@@ -99,7 +102,8 @@ async def reset_password(payload: ResetPasswordRequest, db: AsyncSession = Depen
 
 
 @auth_router.post("/login", response_model=TokenResponse)
-async def login(payload: LoginRequest, db: AsyncSession = Depends(get_db)):
+@limiter.limit("20/minute")
+async def login(request: Request, payload: LoginRequest, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Customer).where(Customer.email == payload.email))
     customer = result.scalar_one_or_none()
     if not customer or not customer.password_hash or not verify_password(payload.password, customer.password_hash):

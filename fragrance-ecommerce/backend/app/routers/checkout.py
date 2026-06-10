@@ -9,6 +9,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from app.config import settings
+from app.core.ratelimit import limiter
 from app.database import get_db
 from app.models.product import Product
 from app.models.order import Order, OrderItem
@@ -50,7 +51,9 @@ class PaymentIntentResponse(BaseModel):
 
 
 @router.post("/create-payment-intent", response_model=PaymentIntentResponse)
+@limiter.limit("10/minute")
 async def create_payment_intent(
+    request: Request,
     payload: CreatePaymentIntentRequest,
     db: AsyncSession = Depends(get_db),
     current_user=Depends(get_optional_user),
@@ -197,7 +200,8 @@ class QuoteResponse(BaseModel):
 
 
 @router.post("/quote", response_model=QuoteResponse)
-async def quote(payload: CreatePaymentIntentRequest, db: AsyncSession = Depends(get_db)):
+@limiter.limit("30/minute")
+async def quote(request: Request, payload: CreatePaymentIntentRequest, db: AsyncSession = Depends(get_db)):
     """Compute an order price breakdown (subtotal, shipping, tax, discount) with no side effects."""
     product_ids = [item.product_id for item in payload.items]
     result = await db.execute(

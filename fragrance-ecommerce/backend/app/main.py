@@ -7,8 +7,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import ValidationError
 from prometheus_client import generate_latest, CONTENT_TYPE_LATEST
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
 from starlette.responses import Response
 from app.config import settings
+from app.core.ratelimit import limiter
 from app.database import engine
 
 log = structlog.get_logger(__name__)
@@ -36,6 +39,9 @@ def create_app() -> FastAPI:
         redoc_url="/redoc" if settings.DEBUG else None,
         lifespan=lifespan,
     )
+
+    _app.state.limiter = limiter
+    _app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
     _app.add_middleware(
         CORSMiddleware,
