@@ -87,7 +87,7 @@ async def create_payment_intent(
     customer_email = (
         payload.customer_email
         or (current_user.email if current_user else None)
-        or "guest@scentara.com"
+        or "guest@aurevia.com"
     )
 
     order = Order(

@@ -9,7 +9,7 @@ RESET         := \033[0m
 .PHONY: help dev build docker-up docker-down restart clean migrate seed test lint format shell-backend shell-db logs
 
 help:
-	@printf '$(CYAN)Scentara$(RESET) — available targets:\n\n'
+	@printf '$(CYAN)Aurevia$(RESET) — available targets:\n\n'
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) \
 		| awk 'BEGIN {FS = ":.*?## "}; {printf "  $(CYAN)%-22s$(RESET) %s\n", $$1, $$2}'
 
@@ -42,8 +42,8 @@ migrate: ## Apply SQL migrations to PostgreSQL
 	@for f in $$(ls database/migrations/*.sql | sort); do \
 		printf "$(CYAN)Applying $$f...$(RESET)\n"; \
 		$(COMPOSE) exec -T postgres psql \
-			-U $${POSTGRES_USER:-scentara_user} \
-			-d $${POSTGRES_DB:-scentara} \
+			-U $${POSTGRES_USER:-aurevia_user} \
+			-d $${POSTGRES_DB:-aurevia} \
 			-f /dev/stdin < $$f; \
 	done
 
@@ -66,7 +66,7 @@ shell-backend: ## Open bash shell in backend container
 	$(BACKEND) bash
 
 shell-db: ## Open psql shell
-	$(COMPOSE) exec postgres psql -U $${POSTGRES_USER:-scentara_user} -d $${POSTGRES_DB:-scentara}
+	$(COMPOSE) exec postgres psql -U $${POSTGRES_USER:-aurevia_user} -d $${POSTGRES_DB:-aurevia}
 
 logs: ## Tail all service logs
 	$(COMPOSE) logs -f --tail=100

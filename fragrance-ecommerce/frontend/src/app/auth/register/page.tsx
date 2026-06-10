@@ -66,7 +66,7 @@ export default function RegisterPage() {
         />
         <div className="relative z-10">
           <p className="text-xs tracking-[0.4em] uppercase text-gold-500 mb-4">
-            Scentara
+            Aurevia
           </p>
           <h2 className="font-serif text-4xl xl:text-5xl text-cream leading-tight mb-6">
             Begin Your
@@ -86,7 +86,7 @@ export default function RegisterPage() {
           {/* Mobile logo */}
           <div className="lg:hidden text-center mb-10">
             <Link href="/" className="font-serif text-2xl text-obsidian tracking-widest">
-              SCENTARA
+              AUREVIA
             </Link>
           </div>
 
@@ -94,7 +94,7 @@ export default function RegisterPage() {
             <p className="text-xs tracking-[0.3em] uppercase text-gold-600 mb-2">
               Create Account
             </p>
-            <h1 className="font-serif text-3xl text-obsidian">Join Scentara</h1>
+            <h1 className="font-serif text-3xl text-obsidian">Join Aurevia</h1>
           </div>
 
           {error && (
@@ -214,7 +214,7 @@ export default function RegisterPage() {
                   className="mt-0.5 w-4 h-4 accent-gold-500 cursor-pointer"
                 />
                 <span className="text-sm text-gray-600 leading-snug">
-                  I agree to Scentara's{" "}
+                  I agree to Aurevia's{" "}
                   <Link
                     href="/terms"
                     className="text-obsidian underline underline-offset-2 hover:text-gold-600 transition-colors"
@@ -269,7 +269,7 @@ export default function RegisterPage() {
               href="/"
               className="text-xs tracking-widest uppercase text-gray-400 hover:text-obsidian transition-colors"
             >
-              ← Back to Scentara
+              ← Back to Aurevia
             </Link>
           </div>
         </div>

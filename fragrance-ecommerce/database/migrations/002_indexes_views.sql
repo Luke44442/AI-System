@@ -1,5 +1,5 @@
 -- ==============================================================================
--- Scentara — Indexes & Materialized Views
+-- Aurevia — Indexes & Materialized Views
 -- Migration 002: Performance Indexes
 -- ==============================================================================
 

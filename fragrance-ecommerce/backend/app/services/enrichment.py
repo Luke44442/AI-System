@@ -105,6 +105,180 @@ Scores are floats from 1.0 to 10.0. Be precise and differentiated — avoid clus
         return {}
 
 
+async def _enrich_with_prompt(prompt: str, max_tokens: int = 2000) -> dict:
+    """Run an enrichment prompt through Claude and parse the JSON response."""
+    try:
+        client = _get_client()
+        message = client.messages.create(
+            model=settings.AI_MODEL,
+            max_tokens=max_tokens,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        return _extract_json(message.content[0].text)
+    except Exception as exc:  # pragma: no cover - network/LLM failures
+        logger.error("enrichment prompt failed: %s", exc)
+        return {}
+
+
+async def enrich_sneaker(brand: str, name: str, attributes: dict) -> dict:
+    """Category-aware enrichment for sneakers."""
+    prompt = f"""You are a sneaker expert and stylist with deep knowledge of sneaker culture, collabs, and resale.
+
+Analyse this sneaker and return richly detailed JSON. Be accurate, not generic.
+
+Sneaker:
+- Brand: {brand}
+- Name: {name}
+- Known attributes: {json.dumps(attributes)}
+
+Return ONLY valid JSON with exactly these fields:
+{{
+  "colorway": "official colorway name",
+  "silhouette": "model/silhouette, e.g. Dunk Low, Air Jordan 4",
+  "release_year": 2021,
+  "material": "primary upper material",
+  "style_tags": ["casual","streetwear","retro", "up to 6 style tags"],
+  "outfit_pairings": [
+    {{"title": "Outfit name", "items": ["item 1","item 2","item 3"], "occasion": "where to wear it"}},
+    {{"title": "Outfit name", "items": ["item 1","item 2","item 3"], "occasion": "where to wear it"}}
+  ],
+  "complementary_categories": ["streetwear","accessories", "categories that pair well"],
+  "hype_score": 8.0,
+  "versatility_score": 7.0,
+  "value_score": 8.5,
+  "ai_description": "2-3 sentences of confident, culture-aware copywriting about this sneaker.",
+  "ai_short_description": "1 punchy sentence.",
+  "tiktok_hook": "Scroll-stopping first 3 seconds for a sneaker TikTok about this pair."
+}}
+Scores are floats 1.0-10.0. Be precise and differentiated."""
+    return await _enrich_with_prompt(prompt)
+
+
+async def enrich_apparel(brand: str, name: str, attributes: dict) -> dict:
+    """Category-aware enrichment for streetwear / designer clothing."""
+    prompt = f"""You are a fashion stylist and streetwear expert.
+
+Analyse this garment and return richly detailed JSON. Be accurate, not generic.
+
+Garment:
+- Brand: {brand}
+- Name: {name}
+- Known attributes: {json.dumps(attributes)}
+
+Return ONLY valid JSON with exactly these fields:
+{{
+  "garment_type": "Hoodie / T-Shirt / Jacket / etc",
+  "fit": "Slim / Regular / Relaxed / Oversized",
+  "material": "primary material",
+  "season": "Spring / Summer / Fall / Winter / All-Season",
+  "color": "primary colour",
+  "style_tags": ["streetwear","minimal", "up to 6 tags"],
+  "outfit_pairings": [
+    {{"title": "Look name", "items": ["item 1","item 2","item 3"], "occasion": "where to wear it"}},
+    {{"title": "Look name", "items": ["item 1","item 2","item 3"], "occasion": "where to wear it"}}
+  ],
+  "complementary_categories": ["sneakers","accessories"],
+  "versatility_score": 7.0,
+  "value_score": 8.0,
+  "ai_description": "2-3 sentences of confident fashion copywriting.",
+  "ai_short_description": "1 punchy sentence.",
+  "tiktok_hook": "Scroll-stopping first 3 seconds for a fashion TikTok about this piece."
+}}
+Scores are floats 1.0-10.0."""
+    return await _enrich_with_prompt(prompt)
+
+
+async def enrich_bag(brand: str, name: str, attributes: dict) -> dict:
+    """Category-aware enrichment for bags."""
+    prompt = f"""You are a luxury accessories expert.
+
+Analyse this bag and return richly detailed JSON.
+
+Bag:
+- Brand: {brand}
+- Name: {name}
+- Known attributes: {json.dumps(attributes)}
+
+Return ONLY valid JSON with exactly these fields:
+{{
+  "bag_type": "Tote / Crossbody / Shoulder / Backpack / Clutch / Top Handle",
+  "material": "primary material",
+  "color": "primary colour",
+  "dimensions": "approx W x H x D",
+  "capacity": "what it fits, e.g. everyday essentials, laptop",
+  "style_tags": ["luxury","everyday", "up to 6 tags"],
+  "outfit_pairings": [
+    {{"title": "Look name", "items": ["item 1","item 2"], "occasion": "where to carry it"}}
+  ],
+  "complementary_categories": ["accessories","fragrances"],
+  "versatility_score": 8.0,
+  "value_score": 7.5,
+  "ai_description": "2-3 sentences of elegant luxury copywriting.",
+  "ai_short_description": "1 elegant sentence.",
+  "tiktok_hook": "Scroll-stopping first 3 seconds for a luxury bag TikTok."
+}}
+Scores are floats 1.0-10.0."""
+    return await _enrich_with_prompt(prompt)
+
+
+async def enrich_generic(category: str, brand: str, name: str, attributes: dict) -> dict:
+    """Fallback enrichment for accessories, watches, jewelry, and new categories."""
+    prompt = f"""You are a luxury retail expert specialising in {category}.
+
+Analyse this product and return richly detailed JSON.
+
+Product:
+- Category: {category}
+- Brand: {brand}
+- Name: {name}
+- Known attributes: {json.dumps(attributes)}
+
+Return ONLY valid JSON with exactly these fields:
+{{
+  "style_tags": ["up to 6 descriptive tags"],
+  "usage_recommendations": ["when/how to use or wear this"],
+  "pairing_recommendations": [
+    {{"category": "complementary category", "reason": "why it pairs well"}}
+  ],
+  "complementary_categories": ["categories that pair well"],
+  "versatility_score": 7.0,
+  "value_score": 7.5,
+  "ai_description": "2-3 sentences of refined luxury copywriting.",
+  "ai_short_description": "1 refined sentence.",
+  "tiktok_hook": "Scroll-stopping first 3 seconds for a TikTok about this product."
+}}
+Scores are floats 1.0-10.0."""
+    return await _enrich_with_prompt(prompt)
+
+
+# Maps a category's attribute_schema_type to the right enrichment routine.
+async def enrich_by_category(
+    schema_type: str,
+    brand: str,
+    name: str,
+    attributes: dict | None = None,
+    *,
+    concentration: str = "",
+    fragrance_family: str = "",
+    gender: str = "unisex",
+) -> dict:
+    """Dispatch enrichment to the category-appropriate generator.
+
+    schema_type comes from Category.attribute_schema_type
+    (fragrance|sneakers|clothing|bags|accessories|watches|jewelry).
+    """
+    attributes = attributes or {}
+    if schema_type == "fragrance":
+        return await enrich_product(brand, name, concentration, fragrance_family, gender)
+    if schema_type == "sneakers":
+        return await enrich_sneaker(brand, name, attributes)
+    if schema_type == "clothing":
+        return await enrich_apparel(brand, name, attributes)
+    if schema_type == "bags":
+        return await enrich_bag(brand, name, attributes)
+    return await enrich_generic(schema_type or "luxury product", brand, name, attributes)
+
+
 async def generate_tiktok_content(
     brand: str,
     name: str,
@@ -216,7 +390,7 @@ async def generate_content_item(content_type: str, params: dict) -> dict:
             "@context": "https://schema.org",
             "@type": "Article",
             "headline": "TITLE_HERE",
-            "author": {"@type": "Organization", "name": "Scentara"},
+            "author": {"@type": "Organization", "name": "Aurevia"},
         }
     elif content_type == "brand_page":
         schema_example = {
@@ -225,7 +399,7 @@ async def generate_content_item(content_type: str, params: dict) -> dict:
             "name": "BRAND_NAME_HERE",
         }
 
-    prompt = f"""You are a senior content strategist and copywriter for Scentara, a luxury fragrance e-commerce brand.
+    prompt = f"""You are a senior content strategist and copywriter for Aurevia, a luxury fragrance e-commerce brand.
 
 Content type: {content_type}
 Task: {instruction}

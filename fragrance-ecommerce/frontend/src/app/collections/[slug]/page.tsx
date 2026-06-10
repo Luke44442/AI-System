@@ -18,7 +18,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   const collection = await getCollectionData(params.slug)
   if (!collection) return {}
   return {
-    title: `${collection.name} | Scentara Collections`,
+    title: `${collection.name} | Aurevia Collections`,
     description: collection.seo_description || collection.description || `Shop the ${collection.name} fragrance collection.`,
     openGraph: {
       title: collection.seo_title || collection.name,
@@ -74,7 +74,7 @@ export default async function CollectionPage({ params }: { params: { slug: strin
               '@type': 'CollectionPage',
               name: collection.name,
               description: collection.description,
-              url: `https://scentara.com/collections/${params.slug}`,
+              url: `https://aurevia.com/collections/${params.slug}`,
             }),
           }}
         />

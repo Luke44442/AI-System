@@ -1,5 +1,5 @@
 -- ==============================================================================
--- Scentara Luxury Fragrance E-Commerce Platform
+-- Aurevia Luxury Fragrance E-Commerce Platform
 -- Migration 001: Initial Schema
 -- ==============================================================================
 
@@ -66,16 +66,16 @@ CREATE TABLE categories (
 CREATE TRIGGER trg_categories_updated_at BEFORE UPDATE ON categories FOR EACH ROW EXECUTE FUNCTION trigger_set_updated_at();
 
 INSERT INTO categories (name, slug, description, seo_title, seo_description, sort_order) VALUES
-    ('Women''s Perfume',   'womens-perfume',   'Luxury fragrances for women',               'Women''s Perfume | Scentara',        'Shop premium women''s perfumes at Scentara.',           1),
-    ('Men''s Cologne',     'mens-cologne',     'Premium colognes and eau de toilette',       'Men''s Cologne | Scentara',          'Discover exceptional men''s colognes at Scentara.',     2),
-    ('Unisex Fragrance',   'unisex-fragrance', 'Gender-neutral luxury fragrances',           'Unisex Fragrances | Scentara',       'Explore unisex and gender-neutral fragrances.',          3),
-    ('Eau de Parfum',      'eau-de-parfum',    'Long-lasting EDP concentrations',            'Eau de Parfum | Scentara',           'Browse rich Eau de Parfum fragrances.',                  4),
-    ('Eau de Toilette',    'eau-de-toilette',  'Fresh and light EDT fragrances',             'Eau de Toilette | Scentara',         'Shop fresh Eau de Toilette fragrances.',                 5),
-    ('Parfum & Extrait',   'parfum-extrait',   'Ultra-concentrated parfum',                  'Parfum & Extrait | Scentara',        'Discover the most opulent parfum extraits.',             6),
-    ('Floral',             'floral',           'Romantic floral fragrances',                 'Floral Fragrances | Scentara',       'Shop beautiful floral fragrances.',                      7),
-    ('Oriental & Woody',   'oriental-woody',   'Rich oriental and woody families',           'Oriental & Woody | Scentara',        'Explore warm oriental and woody fragrances.',            8),
-    ('Fresh & Aquatic',    'fresh-aquatic',    'Light, fresh and aquatic fragrances',        'Fresh & Aquatic | Scentara',         'Shop crisp fresh fragrances for everyday wear.',         9),
-    ('Gift Sets',          'gift-sets',        'Luxury fragrance gift sets',                 'Fragrance Gift Sets | Scentara',     'Find the perfect luxury fragrance gift.',                10);
+    ('Women''s Perfume',   'womens-perfume',   'Luxury fragrances for women',               'Women''s Perfume | Aurevia',        'Shop premium women''s perfumes at Aurevia.',           1),
+    ('Men''s Cologne',     'mens-cologne',     'Premium colognes and eau de toilette',       'Men''s Cologne | Aurevia',          'Discover exceptional men''s colognes at Aurevia.',     2),
+    ('Unisex Fragrance',   'unisex-fragrance', 'Gender-neutral luxury fragrances',           'Unisex Fragrances | Aurevia',       'Explore unisex and gender-neutral fragrances.',          3),
+    ('Eau de Parfum',      'eau-de-parfum',    'Long-lasting EDP concentrations',            'Eau de Parfum | Aurevia',           'Browse rich Eau de Parfum fragrances.',                  4),
+    ('Eau de Toilette',    'eau-de-toilette',  'Fresh and light EDT fragrances',             'Eau de Toilette | Aurevia',         'Shop fresh Eau de Toilette fragrances.',                 5),
+    ('Parfum & Extrait',   'parfum-extrait',   'Ultra-concentrated parfum',                  'Parfum & Extrait | Aurevia',        'Discover the most opulent parfum extraits.',             6),
+    ('Floral',             'floral',           'Romantic floral fragrances',                 'Floral Fragrances | Aurevia',       'Shop beautiful floral fragrances.',                      7),
+    ('Oriental & Woody',   'oriental-woody',   'Rich oriental and woody families',           'Oriental & Woody | Aurevia',        'Explore warm oriental and woody fragrances.',            8),
+    ('Fresh & Aquatic',    'fresh-aquatic',    'Light, fresh and aquatic fragrances',        'Fresh & Aquatic | Aurevia',         'Shop crisp fresh fragrances for everyday wear.',         9),
+    ('Gift Sets',          'gift-sets',        'Luxury fragrance gift sets',                 'Fragrance Gift Sets | Aurevia',     'Find the perfect luxury fragrance gift.',                10);
 
 -- ==============================================================================
 -- SUPPLIERS
@@ -241,12 +241,12 @@ CREATE TABLE collection_products (
 );
 
 INSERT INTO collections (name, slug, subtitle, seo_title, seo_description, sort_order, is_featured, is_automated, automation_rules) VALUES
-    ('New Arrivals',     'new-arrivals',     'Fresh off the bottle',     'New Fragrances | Scentara',          'Shop the latest luxury fragrances just added.',                 1, TRUE,  TRUE,  '{"rules":[{"field":"is_new_arrival","operator":"eq","value":true}]}'),
-    ('Best Sellers',     'best-sellers',     'Loved by thousands',       'Best Selling Fragrances | Scentara', 'Shop our most popular luxury fragrances.',                      2, TRUE,  TRUE,  '{"rules":[{"field":"is_bestseller","operator":"eq","value":true}]}'),
-    ('Summer Scents',    'summer-scents',    'Light, fresh & vibrant',   'Summer Fragrances | Scentara',       'Fresh and vibrant summer fragrances.',                          3, TRUE,  FALSE, '{}'),
-    ('Floral Collection','floral-collection','Blooms in a bottle',        'Floral Perfumes | Scentara',         'Romantic floral perfumes featuring rose and jasmine.',          4, FALSE, TRUE,  '{"rules":[{"field":"fragrance_family","operator":"contains","value":"floral"}]}'),
-    ('Oriental & Woody', 'oriental-woody',   'Deep, rich & mysterious',  'Oriental & Woody | Scentara',        'Warm oriental fragrances with oud, amber, and sandalwood.',     5, FALSE, TRUE,  '{"rules":[{"field":"fragrance_family","operator":"in","value":["oriental","woody"]}]}'),
-    ('Under $50',        'under-50',         'Luxury within reach',      'Fragrances Under $50 | Scentara',    'Premium fragrances priced under $50.',                          6, TRUE,  TRUE,  '{"rules":[{"field":"website_price","operator":"lte","value":50}]}');
+    ('New Arrivals',     'new-arrivals',     'Fresh off the bottle',     'New Fragrances | Aurevia',          'Shop the latest luxury fragrances just added.',                 1, TRUE,  TRUE,  '{"rules":[{"field":"is_new_arrival","operator":"eq","value":true}]}'),
+    ('Best Sellers',     'best-sellers',     'Loved by thousands',       'Best Selling Fragrances | Aurevia', 'Shop our most popular luxury fragrances.',                      2, TRUE,  TRUE,  '{"rules":[{"field":"is_bestseller","operator":"eq","value":true}]}'),
+    ('Summer Scents',    'summer-scents',    'Light, fresh & vibrant',   'Summer Fragrances | Aurevia',       'Fresh and vibrant summer fragrances.',                          3, TRUE,  FALSE, '{}'),
+    ('Floral Collection','floral-collection','Blooms in a bottle',        'Floral Perfumes | Aurevia',         'Romantic floral perfumes featuring rose and jasmine.',          4, FALSE, TRUE,  '{"rules":[{"field":"fragrance_family","operator":"contains","value":"floral"}]}'),
+    ('Oriental & Woody', 'oriental-woody',   'Deep, rich & mysterious',  'Oriental & Woody | Aurevia',        'Warm oriental fragrances with oud, amber, and sandalwood.',     5, FALSE, TRUE,  '{"rules":[{"field":"fragrance_family","operator":"in","value":["oriental","woody"]}]}'),
+    ('Under $50',        'under-50',         'Luxury within reach',      'Fragrances Under $50 | Aurevia',    'Premium fragrances priced under $50.',                          6, TRUE,  TRUE,  '{"rules":[{"field":"website_price","operator":"lte","value":50}]}');
 
 -- ==============================================================================
 -- CUSTOMERS
@@ -409,7 +409,7 @@ CREATE TABLE pricing_rules (
 CREATE TRIGGER trg_pricing_rules_updated_at BEFORE UPDATE ON pricing_rules FOR EACH ROW EXECUTE FUNCTION trigger_set_updated_at();
 
 INSERT INTO pricing_rules (name, description, marketplace, base_markup_pct, marketplace_fee_pct, payment_fee_pct, shipping_buffer, min_margin_pct, target_margin_pct, price_rounding) VALUES
-    ('Website Default',            'Default pricing for the Scentara storefront.',         NULL,       70.00, 0.00,  2.90, 0.00, 20.00, 35.00, 'round_99'),
+    ('Website Default',            'Default pricing for the Aurevia storefront.',         NULL,       70.00, 0.00,  2.90, 0.00, 20.00, 35.00, 'round_99'),
     ('Etsy Pricing',               'Etsy: 6.5% transaction + $0.20 listing fee.',          'etsy',     80.00, 6.50,  3.00, 0.50, 18.00, 32.00, 'round_99'),
     ('eBay Pricing',               'eBay: ~12.9% final value fee.',                        'ebay',     90.00, 12.90, 2.90, 1.00, 18.00, 30.00, 'round_00'),
     ('Facebook Marketplace',       'Facebook: 5% selling fee.',                            'facebook', 75.00, 5.00,  2.90, 0.00, 18.00, 32.00, 'round_99');
@@ -579,7 +579,7 @@ CREATE TABLE system_config (
 );
 
 INSERT INTO system_config (key, value, type, description, is_public) VALUES
-    ('site.name',                     '"Scentara"',                      'string',  'Store name',                              TRUE),
+    ('site.name',                     '"Aurevia"',                      'string',  'Store name',                              TRUE),
     ('site.tagline',                  '"Luxury Fragrances, Delivered"',   'string',  'Store tagline',                           TRUE),
     ('site.currency',                 '"USD"',                            'string',  'Default currency',                        TRUE),
     ('shipping.free_threshold_usd',   '75.00',                            'number',  'Free shipping above this amount',          TRUE),

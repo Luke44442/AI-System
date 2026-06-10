@@ -1,12 +1,14 @@
 from __future__ import annotations
+import json
 import uuid
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import func, select, or_
+from sqlalchemy import cast, func, select, or_
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from app.database import get_db
-from app.models.product import Brand, Category, Product, ProductVariant
+from app.models.product import Brand, Category, CategoryAttribute, Product, ProductVariant
 from app.models.marketplace import Collection, CollectionProduct
 from app.schemas.product import (
     BrandCreate, BrandUpdate, BrandResponse,
@@ -72,16 +74,48 @@ async def create_category(payload: CategoryCreate, db: AsyncSession = Depends(ge
     return cat
 
 
+@categories_router.get("/{slug}/attributes")
+async def get_category_attributes(slug: str, db: AsyncSession = Depends(get_db)):
+    """Return the attribute schema for a category — powers admin forms and faceted filters."""
+    result = await db.execute(
+        select(Category).where(Category.slug == slug).options(selectinload(Category.attributes))
+    )
+    category = result.scalar_one_or_none()
+    if not category:
+        raise HTTPException(status_code=404, detail="Category not found")
+    return {
+        "category": {"id": str(category.id), "name": category.name, "slug": category.slug,
+                     "schema_type": category.attribute_schema_type},
+        "attributes": [
+            {
+                "key": a.key, "label": a.label, "data_type": a.data_type,
+                "options": a.options or [], "unit": a.unit,
+                "is_filterable": a.is_filterable, "is_required": a.is_required,
+                "is_variant_axis": a.is_variant_axis, "sort_order": a.sort_order,
+            }
+            for a in sorted(category.attributes, key=lambda x: x.sort_order)
+        ],
+    }
+
+
+def _resolve_id_from_slug(model, slug: str):
+    return select(model.id).where(model.slug == slug).scalar_subquery()
+
+
 @router.get("", response_model=PaginatedResponse[ProductListItem])
 async def list_products(
     search: Optional[str] = Query(default=None),
     brand_id: Optional[uuid.UUID] = Query(default=None),
+    brand_slug: Optional[str] = Query(default=None),
     category_id: Optional[uuid.UUID] = Query(default=None),
+    category_slug: Optional[str] = Query(default=None),
     gender: Optional[str] = Query(default=None),
     concentration: Optional[str] = Query(default=None),
     is_featured: Optional[bool] = Query(default=None),
+    is_bestseller: Optional[bool] = Query(default=None),
     min_price: Optional[float] = Query(default=None),
     max_price: Optional[float] = Query(default=None),
+    attributes: Optional[str] = Query(default=None, description='JSON object of attribute filters, e.g. {"size":"10","colorway":"Panda"}'),
     pagination: PaginationParams = Depends(get_pagination),
     sort: SortParams = Depends(get_sort),
     db: AsyncSession = Depends(get_db),
@@ -91,25 +125,53 @@ async def list_products(
         .where(Product.is_active == True)
         .options(selectinload(Product.brand), selectinload(Product.variants))
     )
+
+    # Universal full-text search (falls back to ILIKE for short/partial terms)
     if search:
-        query = query.where(or_(
-            Product.name.ilike(f"%{search}%"),
-            Product.sku.ilike(f"%{search}%"),
-        ))
+        term = search.strip()
+        if len(term) >= 2:
+            ts_query = func.websearch_to_tsquery("simple", term)
+            query = query.where(
+                or_(
+                    Product.search_vector.op("@@")(ts_query),
+                    Product.name.ilike(f"%{term}%"),
+                    Product.sku.ilike(f"%{term}%"),
+                )
+            )
+        else:
+            query = query.where(Product.name.ilike(f"%{term}%"))
+
     if brand_id:
         query = query.where(Product.brand_id == brand_id)
+    if brand_slug:
+        query = query.where(Product.brand_id == _resolve_id_from_slug(Brand, brand_slug))
     if category_id:
         query = query.where(Product.category_id == category_id)
+    if category_slug:
+        query = query.where(Product.category_id == _resolve_id_from_slug(Category, category_slug))
     if gender:
         query = query.where(Product.gender == gender)
     if concentration:
         query = query.where(Product.concentration == concentration)
     if is_featured is not None:
         query = query.where(Product.is_featured == is_featured)
+    if is_bestseller is not None:
+        query = query.where(Product.is_bestseller == is_bestseller)
     if min_price is not None:
         query = query.where(Product.website_price >= min_price)
     if max_price is not None:
         query = query.where(Product.website_price <= max_price)
+
+    # Faceted attribute filtering against the JSONB attributes column (GIN-indexed).
+    # Uses @> containment via SQLAlchemy's JSONB.contains for index-friendly matching.
+    if attributes:
+        try:
+            attr_filters = json.loads(attributes)
+            if isinstance(attr_filters, dict) and attr_filters:
+                normalized = {k: str(v) for k, v in attr_filters.items()}
+                query = query.where(cast(Product.attributes, JSONB).contains(normalized))
+        except (json.JSONDecodeError, TypeError):
+            pass
 
     count_result = await db.execute(select(func.count()).select_from(query.subquery()))
     total = count_result.scalar_one()

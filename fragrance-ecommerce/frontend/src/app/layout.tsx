@@ -7,22 +7,22 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: {
-    default: "Scentara — Luxury Fragrances",
-    template: "%s | Scentara",
+    default: "Aurevia — Luxury Fragrances, Sneakers, Streetwear & More",
+    template: "%s | Aurevia",
   },
-  description: "Authentic luxury fragrances from the world's finest houses. Shop Chanel, Dior, Tom Ford, and more.",
-  keywords: ["luxury perfume", "designer fragrance", "eau de parfum", "authentic perfume"],
+  description: "Aurevia is a luxury multi-category marketplace. Shop authentic fragrances, sneakers, streetwear, designer clothing, bags, watches, and accessories.",
+  keywords: ["luxury fragrances", "designer sneakers", "streetwear", "designer clothing", "luxury bags", "watches", "authentic designer"],
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "https://scentara.com",
-    siteName: "Scentara",
-    title: "Scentara — Luxury Fragrances",
-    description: "Authentic luxury fragrances delivered worldwide.",
+    url: "https://aurevia.com",
+    siteName: "Aurevia",
+    title: "Aurevia — Luxury Multi-Category Marketplace",
+    description: "Authentic luxury fragrances, sneakers, streetwear, bags, and more — delivered worldwide.",
   },
   twitter: {
     card: "summary_large_image",
-    site: "@scentara",
+    site: "@aurevia",
   },
   robots: { index: true, follow: true },
 };

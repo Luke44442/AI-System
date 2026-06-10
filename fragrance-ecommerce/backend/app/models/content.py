@@ -76,7 +76,7 @@ class ContentItem(BaseModel):
     # Publishing
     status: Mapped[str] = mapped_column(String(30), nullable=False, default="draft", index=True)
     published_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
-    author: Mapped[str] = mapped_column(String(255), nullable=False, default="Scentara Team")
+    author: Mapped[str] = mapped_column(String(255), nullable=False, default="Aurevia Team")
 
     # Schema / internal links
     schema_markup: Mapped[Optional[dict]] = mapped_column(JSON)

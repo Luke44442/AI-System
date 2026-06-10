@@ -141,12 +141,12 @@ def generate_sitemap():
                 ET.SubElement(url, "lastmod").text = datetime.utcnow().strftime("%Y-%m-%d")
                 ET.SubElement(url, "priority").text = priority
 
-            add_url("https://scentara.com/", "1.0")
-            add_url("https://scentara.com/products", "0.9")
+            add_url("https://aurevia.com/", "1.0")
+            add_url("https://aurevia.com/products", "0.9")
             for slug in product_slugs:
-                add_url(f"https://scentara.com/products/{slug}")
+                add_url(f"https://aurevia.com/products/{slug}")
             for slug in category_slugs:
-                add_url(f"https://scentara.com/categories/{slug}", "0.7")
+                add_url(f"https://aurevia.com/categories/{slug}", "0.7")
 
             sitemap_xml = ET.tostring(urlset, encoding="unicode", xml_declaration=True)
             logger.info(f"Sitemap generated with {len(product_slugs)} products")

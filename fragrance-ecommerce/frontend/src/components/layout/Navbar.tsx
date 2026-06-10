@@ -38,7 +38,7 @@ export default function Navbar() {
         </button>
 
         <Link href="/" className="font-serif text-2xl lg:text-3xl tracking-wider text-obsidian">
-          SCENTARA
+          AUREVIA
         </Link>
 
         <ul className="hidden lg:flex items-center gap-8">

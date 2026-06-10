@@ -22,11 +22,11 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   const { brand } = await getBrandData(params.slug)
   if (!brand) return {}
   return {
-    title: `${brand.name} Fragrances | Scentara`,
+    title: `${brand.name} Fragrances | Aurevia`,
     description: `Shop authentic ${brand.name} fragrances. Discover the full ${brand.name} collection including EDP, EDT, and Parfum concentrations.`,
     openGraph: {
       title: `${brand.name} Fragrances`,
-      description: `Premium ${brand.name} fragrances collection at Scentara.`,
+      description: `Premium ${brand.name} fragrances collection at Aurevia.`,
     },
   }
 }
@@ -62,8 +62,8 @@ export default async function BrandPage({ params }: { params: { slug: string } }
               '@context': 'https://schema.org',
               '@type': 'CollectionPage',
               name: `${brandName} Fragrances`,
-              description: `Shop ${brandName} fragrances at Scentara`,
-              url: `https://scentara.com/brands/${params.slug}`,
+              description: `Shop ${brandName} fragrances at Aurevia`,
+              url: `https://aurevia.com/brands/${params.slug}`,
               numberOfItems: products.length,
             }),
           }}

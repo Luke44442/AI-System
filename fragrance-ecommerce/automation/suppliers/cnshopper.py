@@ -16,7 +16,7 @@ class CNShopperSupplier(BaseSupplier):
         super().__init__(credentials)
         self._session = httpx.Client(
             base_url=BASE_URL,
-            headers={"User-Agent": "Mozilla/5.0 (compatible; ScentaraBot/1.0)"},
+            headers={"User-Agent": "Mozilla/5.0 (compatible; AureviaBot/1.0)"},
             timeout=30,
             follow_redirects=True,
         )

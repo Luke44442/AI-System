@@ -17,7 +17,7 @@ class OrientDigSupplier(BaseSupplier):
         self._session = httpx.Client(
             base_url=BASE_URL,
             headers={
-                "User-Agent": "Mozilla/5.0 (compatible; ScentaraBot/1.0)",
+                "User-Agent": "Mozilla/5.0 (compatible; AureviaBot/1.0)",
                 "Accept-Language": "en-US,en;q=0.9",
             },
             timeout=30,

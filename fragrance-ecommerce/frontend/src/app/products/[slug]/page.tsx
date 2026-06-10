@@ -12,7 +12,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   try {
     const product = await productsApi.get(params.slug);
     return {
-      title: product.seo_title || `${product.name} | Scentara`,
+      title: product.seo_title || `${product.name} | Aurevia`,
       description: product.seo_description || product.short_description || undefined,
       openGraph: {
         title: product.name,
@@ -21,7 +21,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       },
     };
   } catch {
-    return { title: "Product | Scentara" };
+    return { title: "Product | Aurevia" };
   }
 }
 

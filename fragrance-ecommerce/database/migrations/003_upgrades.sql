@@ -1,5 +1,5 @@
 -- ==============================================================================
--- Scentara Luxury Fragrance E-Commerce Platform
+-- Aurevia Luxury Fragrance E-Commerce Platform
 -- Migration 003: Upgrades — Enrichment, Analytics, Marketing & Multi-Category
 -- ==============================================================================
 -- Idempotent: all DDL uses IF NOT EXISTS / DO $$ guards.
@@ -166,7 +166,7 @@ CREATE TABLE IF NOT EXISTS content_items (
     brand_ids           JSONB       NOT NULL DEFAULT '[]',
     status              VARCHAR(30) NOT NULL DEFAULT 'draft',
     published_at        TIMESTAMPTZ,
-    author              VARCHAR(255) NOT NULL DEFAULT 'Scentara Team',
+    author              VARCHAR(255) NOT NULL DEFAULT 'Aurevia Team',
     schema_markup       JSONB,
     internal_links      JSONB       NOT NULL DEFAULT '[]',
     view_count          INTEGER     NOT NULL DEFAULT 0,

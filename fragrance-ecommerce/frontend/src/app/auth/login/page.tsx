@@ -45,7 +45,7 @@ export default function LoginPage() {
         />
         <div className="relative z-10">
           <p className="text-xs tracking-[0.4em] uppercase text-gold-500 mb-4">
-            Scentara
+            Aurevia
           </p>
           <h2 className="font-serif text-4xl xl:text-5xl text-cream leading-tight mb-6">
             The World's Finest
@@ -65,7 +65,7 @@ export default function LoginPage() {
           {/* Mobile logo */}
           <div className="lg:hidden text-center mb-10">
             <Link href="/" className="font-serif text-2xl text-obsidian tracking-widest">
-              SCENTARA
+              AUREVIA
             </Link>
           </div>
 
@@ -139,7 +139,7 @@ export default function LoginPage() {
 
           <div className="mt-10 pt-8 border-t border-gray-200 text-center">
             <p className="text-sm text-gray-500">
-              New to Scentara?{" "}
+              New to Aurevia?{" "}
               <Link
                 href="/auth/register"
                 className="text-obsidian font-medium underline underline-offset-2 hover:text-gold-600 transition-colors"
@@ -154,7 +154,7 @@ export default function LoginPage() {
               href="/"
               className="text-xs tracking-widest uppercase text-gray-400 hover:text-obsidian transition-colors"
             >
-              ← Back to Scentara
+              ← Back to Aurevia
             </Link>
           </div>
         </div>

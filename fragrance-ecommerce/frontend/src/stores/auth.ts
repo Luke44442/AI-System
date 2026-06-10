@@ -24,7 +24,7 @@ export const useAuthStore = create<AuthStore>()(
         set({ isLoading: true });
         try {
           const data = await authApi.login(email, password);
-          if (typeof window !== "undefined") localStorage.setItem("scentara_token", data.access_token);
+          if (typeof window !== "undefined") localStorage.setItem("aurevia_token", data.access_token);
           set({ token: data.access_token, isLoading: false });
           await get().fetchMe();
         } catch (err) {
@@ -37,7 +37,7 @@ export const useAuthStore = create<AuthStore>()(
         set({ isLoading: true });
         try {
           const data = await authApi.register(email, password, firstName, lastName);
-          if (typeof window !== "undefined") localStorage.setItem("scentara_token", data.access_token);
+          if (typeof window !== "undefined") localStorage.setItem("aurevia_token", data.access_token);
           set({ token: data.access_token, isLoading: false });
           await get().fetchMe();
         } catch (err) {
@@ -47,7 +47,7 @@ export const useAuthStore = create<AuthStore>()(
       },
 
       logout: () => {
-        if (typeof window !== "undefined") localStorage.removeItem("scentara_token");
+        if (typeof window !== "undefined") localStorage.removeItem("aurevia_token");
         set({ customer: null, token: null });
       },
 
@@ -60,6 +60,6 @@ export const useAuthStore = create<AuthStore>()(
         }
       },
     }),
-    { name: "scentara-auth", partialize: (state) => ({ token: state.token }) }
+    { name: "aurevia-auth", partialize: (state) => ({ token: state.token }) }
   )
 );

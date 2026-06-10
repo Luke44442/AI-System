@@ -40,6 +40,9 @@ class CategoryResponse(BaseModel):
     slug: str
     description: Optional[str] = None
     image_url: Optional[str] = None
+    icon: Optional[str] = None
+    attribute_schema_type: Optional[str] = None
+    is_featured: bool = False
     sort_order: int
     product_count: int
     is_active: bool
@@ -181,6 +184,13 @@ class ProductResponse(BaseModel):
     supplier_id: Optional[uuid.UUID] = None
     description: Optional[str] = None
     short_description: Optional[str] = None
+    product_type: str = "fragrance"
+    style_category: Optional[str] = None
+    size_options: Optional[List[str]] = None
+    color_options: Optional[List[str]] = None
+    material: Optional[str] = None
+    care_instructions: Optional[str] = None
+    attributes: Optional[dict] = None
     fragrance_family: Optional[str] = None
     concentration: Optional[str] = None
     gender: str
@@ -223,6 +233,10 @@ class ProductListItem(BaseModel):
     sku: str
     name: str
     slug: str
+    product_type: str = "fragrance"
+    style_category: Optional[str] = None
+    category_id: Optional[uuid.UUID] = None
+    attributes: Optional[dict] = None
     fragrance_family: Optional[str] = None
     concentration: Optional[str] = None
     gender: str

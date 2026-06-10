@@ -31,7 +31,7 @@ def create_app() -> FastAPI:
     _app = FastAPI(
         title=settings.APP_NAME,
         version=settings.APP_VERSION,
-        description="**Scentara** — Luxury Fragrance E-Commerce API. Manage products, orders, marketplace listings, AI content and automated pricing.",
+        description="**Aurevia** — Luxury Fragrance E-Commerce API. Manage products, orders, marketplace listings, AI content and automated pricing.",
         docs_url="/docs" if settings.DEBUG else None,
         redoc_url="/redoc" if settings.DEBUG else None,
         lifespan=lifespan,

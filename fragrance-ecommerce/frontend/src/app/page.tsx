@@ -7,7 +7,7 @@ import NewsletterForm from "@/components/NewsletterForm";
 import type { Product, Collection } from "@/types";
 
 export const metadata: Metadata = {
-  title: "Scentara — Luxury Fragrances",
+  title: "Aurevia — Luxury Fragrances",
   description: "Authentic luxury fragrances from the world's finest houses. Free shipping on orders over $75.",
 };
 
@@ -36,16 +36,16 @@ export default async function HomePage() {
           <div className="absolute inset-0 bg-gradient-to-b from-transparent via-obsidian/20 to-obsidian/60" />
         </div>
         <div className="relative z-10 text-center text-white px-4">
-          <p className="section-subtitle text-gold-400 mb-6">Est. 2024</p>
+          <p className="section-subtitle text-gold-400 mb-6">Est. 2024 · Luxury Marketplace</p>
           <h1 className="font-serif text-5xl md:text-7xl lg:text-8xl leading-none mb-8 text-white">
-            The Art of<br />Scent
+            Luxury,<br />Curated
           </h1>
-          <p className="text-lg md:text-xl text-gray-300 max-w-lg mx-auto mb-12 font-light leading-relaxed">
-            Authentic luxury fragrances from the world's finest houses, delivered to your door.
+          <p className="text-lg md:text-xl text-gray-300 max-w-xl mx-auto mb-12 font-light leading-relaxed">
+            Authentic fragrances, sneakers, streetwear, and designer pieces from the world's finest houses — delivered to your door.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href="/products" className="btn-gold text-sm">
-              Explore Fragrances
+              Shop All
             </Link>
             <Link href="/collections" className="btn-outline border-white text-white hover:bg-white hover:text-obsidian text-sm">
               View Collections
@@ -83,7 +83,7 @@ export default async function HomePage() {
           <div className="container-luxury">
             <div className="text-center mb-12">
               <p className="section-subtitle text-gold-600 mb-3">Curated Selection</p>
-              <h2 className="section-title">Featured Fragrances</h2>
+              <h2 className="section-title">Featured</h2>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 lg:gap-6">
               {featuredProducts.slice(0, 8).map((product: Product) => (
@@ -92,7 +92,7 @@ export default async function HomePage() {
             </div>
             <div className="text-center mt-12">
               <Link href="/products" className="btn-outline">
-                View All Fragrances
+                Shop All
               </Link>
             </div>
           </div>
@@ -143,14 +143,14 @@ export default async function HomePage() {
             <p className="section-subtitle text-gold-600 mb-6">Our Promise</p>
             <h2 className="section-title mb-8">Every Bottle, Authenticated</h2>
             <p className="text-gray-600 leading-relaxed mb-12">
-              At Scentara, we source every fragrance directly from authorized distributors and brand partners.
-              Each bottle comes with a certificate of authenticity and is inspected before shipping.
-              Experience luxury the way it was meant to be experienced.
+              At Aurevia, every piece is sourced from trusted partners and inspected before it ships.
+              From fragrances to sneakers to designer apparel, each item is verified for authenticity
+              so you can shop luxury with total confidence.
             </p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               {[
-                { num: "5,000+", label: "Authentic Fragrances" },
-                { num: "50+", label: "Luxury Brands" },
+                { num: "5,000+", label: "Authenticated Products" },
+                { num: "60+", label: "Luxury Brands" },
                 { num: "98%", label: "Customer Satisfaction" },
               ].map(({ num, label }) => (
                 <div key={label} className="text-center">

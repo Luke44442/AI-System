@@ -32,11 +32,38 @@ class Category(BaseModel):
     image_url: Mapped[Optional[str]] = mapped_column(String(2048))
     sort_order: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     product_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    attribute_schema_type: Mapped[Optional[str]] = mapped_column(String(50))  # fragrance|sneakers|clothing|bags|accessories|watches|jewelry
+    icon: Mapped[Optional[str]] = mapped_column(String(80))
+    is_featured: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     parent: Mapped[Optional["Category"]] = relationship("Category", back_populates="children", remote_side="Category.id")
     children: Mapped[List["Category"]] = relationship("Category", back_populates="parent", lazy="selectin")
     products: Mapped[List["Product"]] = relationship("Product", back_populates="category")
+    attributes: Mapped[List["CategoryAttribute"]] = relationship("CategoryAttribute", back_populates="category", cascade="all, delete-orphan", order_by="CategoryAttribute.sort_order")
     def __repr__(self) -> str: return f"<Category {self.name!r}>"
+
+
+class CategoryAttribute(BaseModel):
+    """Defines an attribute that products in a given category can carry.
+
+    Values are stored on Product.attributes (JSONB), keyed by `key`. This table
+    is the schema layer that makes the catalog multi-category: it drives admin
+    forms, faceted search/filtering, and category-aware AI enrichment.
+    """
+    __tablename__ = "category_attributes"
+    category_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("categories.id", ondelete="CASCADE"), nullable=False, index=True)
+    key: Mapped[str] = mapped_column(String(80), nullable=False)
+    label: Mapped[str] = mapped_column(String(120), nullable=False)
+    data_type: Mapped[str] = mapped_column(String(20), default="string", nullable=False)  # string|number|enum|multi_enum|boolean
+    options: Mapped[Optional[list]] = mapped_column(JSON, default=list)
+    unit: Mapped[Optional[str]] = mapped_column(String(20))
+    is_filterable: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    is_searchable: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    is_required: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    is_variant_axis: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    sort_order: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    category: Mapped["Category"] = relationship("Category", back_populates="attributes")
+    def __repr__(self) -> str: return f"<CategoryAttribute {self.key!r} cat={self.category_id}>"
 
 
 class Supplier(BaseModel):
@@ -66,6 +93,14 @@ class Product(BaseModel):
     slug: Mapped[str] = mapped_column(String(500), unique=True, nullable=False, index=True)
     description: Mapped[Optional[str]] = mapped_column(Text)
     short_description: Mapped[Optional[str]] = mapped_column(Text)
+    # Multi-category fields (added in migration 003/004)
+    product_type: Mapped[str] = mapped_column(String(50), default="fragrance", nullable=False, index=True)
+    style_category: Mapped[Optional[str]] = mapped_column(String(100))
+    size_options: Mapped[Optional[list]] = mapped_column(JSON, default=list)
+    color_options: Mapped[Optional[list]] = mapped_column(JSON, default=list)
+    material: Mapped[Optional[str]] = mapped_column(String(255))
+    care_instructions: Mapped[Optional[str]] = mapped_column(Text)
+    # Fragrance-specific fields (nullable for non-fragrance categories)
     fragrance_family: Mapped[Optional[str]] = mapped_column(String(100))
     concentration: Mapped[Optional[str]] = mapped_column(String(50), index=True)
     gender: Mapped[str] = mapped_column(String(20), default="unisex", nullable=False, index=True)

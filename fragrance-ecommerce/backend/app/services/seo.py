@@ -29,7 +29,7 @@ def generate_seo_title(brand: str, name: str, concentration: Optional[str] = Non
     title = " ".join(parts)
     if len(title) > 55:
         title = f"{brand} {name}"[:55]
-    return f"{title} | Scentara"[:70]
+    return f"{title} | Aurevia"[:70]
 
 
 def generate_seo_description(

@@ -4,7 +4,7 @@ import Image from "next/image";
 import { collectionsApi } from "@/lib/api";
 
 export const metadata: Metadata = {
-  title: "Collections | Scentara",
+  title: "Collections | Aurevia",
   description: "Explore our curated fragrance collections.",
 };
 

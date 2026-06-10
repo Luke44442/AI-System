@@ -1038,6 +1038,60 @@ def _pick_image(meta: dict, idx: int) -> str:
 SHIPPING = Decimal("8")
 STREETWEAR_SHIPPING = Decimal("12")
 
+# Size runs per product type, used as variant axes / size_options.
+_SNEAKER_SIZES = ["7", "7.5", "8", "8.5", "9", "9.5", "10", "10.5", "11", "11.5", "12"]
+_APPAREL_SIZES = ["S", "M", "L", "XL", "XXL"]
+
+# Common colour words to extract from a product name.
+_COLOR_WORDS = [
+    "black", "white", "red", "blue", "green", "pink", "grey", "gray", "cream",
+    "brown", "tan", "purple", "yellow", "orange", "navy", "beige", "silver", "gold",
+]
+
+# Map a clothing style category to its garment_type attribute value.
+_GARMENT_TYPE_MAP = {
+    "Hoodies": "Hoodie", "T-Shirts": "T-Shirt", "Sweatshirts": "Sweatshirt",
+    "Sweatpants": "Sweatpants", "Jeans": "Jeans", "Pants": "Pants",
+    "Tracksuits": "Tracksuit", "Hats": "Hat",
+}
+
+
+def _extract_color(name: str) -> str | None:
+    lowered = name.lower()
+    for c in _COLOR_WORDS:
+        if c in lowered:
+            return c.title()
+    return None
+
+
+def _streetwear_attributes(product_type: str, style_cat: str, raw_name: str) -> tuple[dict, list]:
+    """Derive the category attributes JSONB and size_options for a streetwear product."""
+    color = _extract_color(raw_name)
+    attrs: dict = {}
+    size_opts: list = []
+
+    if product_type == "shoes":
+        size_opts = _SNEAKER_SIZES
+        attrs["silhouette"] = style_cat  # e.g. "Sneakers"
+        if color:
+            attrs["colorway"] = color
+    elif product_type == "clothing":
+        size_opts = _APPAREL_SIZES
+        attrs["garment_type"] = _GARMENT_TYPE_MAP.get(style_cat, style_cat)
+        attrs["fit"] = "Regular"
+        if color:
+            attrs["color"] = color
+    elif product_type == "accessories":
+        if style_cat == "Bags":
+            attrs["bag_type"] = "Tote"
+            attrs["material"] = "Leather"
+        else:
+            attrs["accessory_type"] = style_cat
+        if color:
+            attrs["color"] = color
+
+    return attrs, size_opts
+
 
 async def seed():
     async with AsyncSessionLocal() as db:
@@ -1114,6 +1168,36 @@ async def seed():
             db.add(sw_supplier)
             await db.flush()
 
+        # Load (or create) the top-level categories so products can be assigned.
+        from app.models.product import Category
+        category_map: dict[str, object] = {}
+        category_defs = [
+            ("Fragrances", "fragrances", "fragrance"),
+            ("Sneakers", "sneakers", "sneakers"),
+            ("Streetwear", "streetwear", "clothing"),
+            ("Designer Clothing", "designer-clothing", "clothing"),
+            ("Bags", "bags", "bags"),
+            ("Accessories", "accessories", "accessories"),
+            ("Watches", "watches", "watches"),
+            ("Jewelry", "jewelry", "jewelry"),
+        ]
+        for cat_name, cat_slug, schema_type in category_defs:
+            cat_res = await db.execute(select(Category).where(Category.slug == cat_slug))
+            cat = cat_res.scalar_one_or_none()
+            if not cat:
+                cat = Category(name=cat_name, slug=cat_slug, attribute_schema_type=schema_type, is_active=True)
+                db.add(cat)
+                await db.flush()
+                print(f"  Category created: {cat_name}")
+            category_map[cat_slug] = cat
+
+        def _streetwear_category_slug(product_type: str, style_cat: str) -> str:
+            if product_type == "shoes":
+                return "sneakers"
+            if product_type == "accessories":
+                return "bags" if style_cat == "Bags" else "accessories"
+            return "streetwear"  # clothing → streetwear
+
         added = 0
         skipped = 0
         brand_counter: dict[str, int] = {}
@@ -1152,11 +1236,14 @@ async def seed():
             brand_counter[brand_name] = idx + 1
             image_url = _pick_image(meta, idx)
 
+            fragrance_category = category_map.get("fragrances")
+            gender_label = {"male": "Men", "female": "Women"}.get(gender, "Unisex")
             product = Product(
                 sku=sku,
                 slug=slug,
                 name=display_name,
                 brand_id=brand_obj.id if brand_obj else None,
+                category_id=fragrance_category.id if fragrance_category else None,
                 supplier_id=supplier.id,
                 concentration=concentration,
                 volume_ml=100,
@@ -1172,6 +1259,12 @@ async def seed():
                 seo_title=generate_seo_title(brand_display, display_name, concentration, 100),
                 seo_description=generate_seo_description(brand_display, display_name, concentration, meta["default_family"], gender),
                 seo_keywords=seo_keywords,
+                attributes={
+                    "concentration": concentration.title(),
+                    "fragrance_family": meta["default_family"],
+                    "volume_ml": "100",
+                    "gender": gender_label,
+                },
                 is_active=True,
                 is_featured=(cost >= Decimal("7")),
                 is_new_arrival=True,
@@ -1211,12 +1304,20 @@ async def seed():
             brand_counter[brand_name] = idx + 1
             image_url = _pick_image(sw_meta, idx)
 
+            cat_slug = _streetwear_category_slug(product_type, style_cat)
+            category_obj = category_map.get(cat_slug)
+            attrs, size_opts = _streetwear_attributes(product_type, style_cat, raw_name)
+
             product = Product(
                 sku=f"SW-{brand_display[:4].upper()}-{idx:04d}",
                 slug=slug,
                 name=raw_name,
                 brand_id=brand_obj.id if brand_obj else None,
+                category_id=category_obj.id if category_obj else None,
                 supplier_id=sw_supplier.id,
+                product_type=product_type,
+                style_category=style_cat,
+                size_options=size_opts,
                 concentration=None,
                 volume_ml=None,
                 gender="unisex",
@@ -1228,9 +1329,11 @@ async def seed():
                 inventory_status="in_stock",
                 inventory_quantity=30,
                 images=[{"url": image_url, "alt": f"{brand_display} {raw_name}", "is_primary": True}],
-                seo_title=f"{brand_display} {raw_name} | Scentara",
+                seo_title=f"{brand_display} {raw_name} | Aurevia",
                 seo_description=f"Shop authentic {brand_display} {raw_name}. Premium quality {style_cat.lower()} at the best prices.",
                 seo_keywords=[brand_display.lower(), raw_name.lower(), style_cat.lower(), product_type],
+                tags=[style_cat.lower(), product_type, brand_display.lower()],
+                attributes=attrs,
                 is_active=True,
                 is_featured=(cost >= Decimal("50")),
                 is_new_arrival=True,
