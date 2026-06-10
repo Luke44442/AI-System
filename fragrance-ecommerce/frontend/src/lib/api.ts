@@ -157,3 +157,47 @@ export const discountApi = {
   validate: (code: string, orderTotal: number) =>
     api.post("/marketplace/discount-codes/validate", null, { params: { code, order_total: orderTotal } }).then((r) => r.data),
 };
+
+// ---------------------------------------------------------------------------
+// Analytics (admin)
+// ---------------------------------------------------------------------------
+
+export interface ProfitDashboard {
+  profit_7d: number; profit_30d: number;
+  revenue_7d: number; revenue_30d: number;
+  orders_7d: number; orders_30d: number;
+  avg_margin_30d: number;
+}
+
+export interface ProfitabilityRow {
+  order_id: string; order_number: string; order_date: string;
+  revenue: number; supplier_cost: number; shipping_cost: number;
+  platform_fee: number; stripe_fee: number;
+  gross_profit: number; net_profit: number;
+  margin_pct: number; channel: string;
+}
+
+export interface ProfitabilityResponse {
+  items: ProfitabilityRow[];
+  summary: {
+    total_revenue: number; total_profit: number; avg_margin_pct: number;
+    by_channel: Record<string, { revenue: number; profit: number; orders: number }>;
+  };
+}
+
+export interface PricingAlert {
+  id: string; product_id: string; alert_type: string;
+  message: string; current_value: number; threshold_value: number;
+  is_resolved: boolean; created_at: string;
+}
+
+export const analyticsApi = {
+  dashboard: () =>
+    api.get<ProfitDashboard>("/analytics/dashboard/profit").then((r) => r.data),
+  profitability: (params?: { from_date?: string; to_date?: string; channel?: string; limit?: number }) =>
+    api.get<ProfitabilityResponse>("/analytics/profitability", { params }).then((r) => r.data),
+  pricingAlerts: () =>
+    api.get<{ items: PricingAlert[] }>("/analytics/pricing-alerts").then((r) => r.data),
+  resolveAlert: (alertId: string) =>
+    api.post(`/analytics/pricing-alerts/${alertId}/resolve`).then((r) => r.data),
+};
