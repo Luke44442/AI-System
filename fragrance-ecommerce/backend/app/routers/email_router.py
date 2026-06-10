@@ -122,3 +122,67 @@ async def subscriber_counts(db: AsyncSession = Depends(get_db)):
         "unsubscribed": counts.get("unsubscribed", 0),
         "bounced": counts.get("bounced", 0),
     }
+
+
+# ---------------------------------------------------------------------------
+# Admin: test SMTP and trigger automation runs
+# ---------------------------------------------------------------------------
+
+class TestEmailRequest(BaseModel):
+    to: EmailStr
+    template: str = "welcome"
+
+
+@router.post("/test", dependencies=[Depends(get_current_admin)])
+async def send_test_email(payload: TestEmailRequest):
+    """Send a sample email to verify SMTP is configured correctly."""
+    from app.services.email import (
+        send_welcome_email, send_cart_abandonment_email,
+        send_order_confirmation_email, send_shipping_notification_email,
+    )
+    template = payload.template
+    if template == "welcome":
+        ok = send_welcome_email(payload.to, "Admin")
+    elif template == "cart_abandonment":
+        ok = send_cart_abandonment_email(
+            payload.to, "Admin",
+            [{"name": "Tom Ford Oud Wood 100ml", "quantity": 1, "unit_price": 310.00}],
+        )
+    elif template == "order_confirmation":
+        ok = send_order_confirmation_email(
+            payload.to, "Admin", "AUR-TEST-001",
+            [{"name": "Tom Ford Oud Wood 100ml", "quantity": 1, "unit_price": 310.00}],
+            310.00, 12.95, 27.34, 0.00, 350.29,
+        )
+    elif template == "shipping":
+        ok = send_shipping_notification_email(
+            payload.to, "Admin", "AUR-TEST-001", "1Z999AA10123456784",
+            "https://track.example.com", "UPS",
+        )
+    else:
+        raise HTTPException(status_code=400, detail=f"Unknown template: {template}")
+    return {"sent": ok, "template": template, "to": payload.to}
+
+
+@router.post("/automations/cart-abandonment/run", dependencies=[Depends(get_current_admin)])
+async def trigger_cart_abandonment():
+    """Manually trigger a cart abandonment email run."""
+    from app.workers.tasks import send_cart_abandonment_emails
+    task = send_cart_abandonment_emails.delay()
+    return {"task_id": task.id, "status": "queued"}
+
+
+@router.post("/automations/review-requests/run", dependencies=[Depends(get_current_admin)])
+async def trigger_review_requests():
+    """Manually trigger a review-request email run."""
+    from app.workers.tasks import send_review_request_emails
+    task = send_review_request_emails.delay()
+    return {"task_id": task.id, "status": "queued"}
+
+
+@router.post("/automations/win-back/run", dependencies=[Depends(get_current_admin)])
+async def trigger_win_back():
+    """Manually trigger a win-back email run."""
+    from app.workers.tasks import send_win_back_emails
+    task = send_win_back_emails.delay()
+    return {"task_id": task.id, "status": "queued"}

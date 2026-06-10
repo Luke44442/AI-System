@@ -20,7 +20,10 @@ from app.models.order import Order, OrderItem
 from app.models.product import Product
 from app.models.analytics import OrderProfitability
 from app.services.pricing_intelligence import calculate_order_profitability
-from app.services.email import send_email
+from app.services.email import (
+    send_order_confirmation_email,
+    send_shipping_notification_email,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -80,12 +83,22 @@ async def process_paid_order(db: AsyncSession, order: Order) -> dict:
     recipient = order.guest_email or (order.customer.email if order.customer else None)
     if recipient:
         try:
-            send_email(
-                recipient,
-                f"Your Aurevia order {order.order_number} is confirmed",
-                f"<p>Thanks for your order! Order <strong>{order.order_number}</strong> is being prepared. "
-                f"We'll email tracking details as soon as it ships.</p>",
-                f"Your Aurevia order {order.order_number} is confirmed and being prepared.",
+            first_name = (order.customer.first_name if order.customer else None) or order.customer_name
+            items = [
+                {"name": i.name, "quantity": i.quantity, "unit_price": float(i.unit_price)}
+                for i in order.items
+            ]
+            send_order_confirmation_email(
+                to=recipient,
+                first_name=first_name,
+                order_number=order.order_number,
+                items=items,
+                subtotal=float(order.subtotal),
+                shipping=float(order.shipping_amount),
+                tax=float(order.tax_amount),
+                discount=float(order.discount_amount),
+                total=float(order.total),
+                shipping_address=order.shipping_address,
             )
         except Exception:
             pass
@@ -112,13 +125,15 @@ async def assign_tracking(db: AsyncSession, order: Order, tracking_number: str,
 
     recipient = order.guest_email or (order.customer.email if order.customer else None)
     if recipient:
-        track_line = f'<p>Track it: <a href="{tracking_url}">{tracking_number}</a></p>' if tracking_url else f"<p>Tracking: {tracking_number}</p>"
         try:
-            send_email(
-                recipient,
-                f"Your Aurevia order {order.order_number} has shipped",
-                f"<p>Good news — order <strong>{order.order_number}</strong> is on its way.</p>{track_line}",
-                f"Your Aurevia order {order.order_number} has shipped. Tracking: {tracking_number}",
+            first_name = (order.customer.first_name if order.customer else None) or order.customer_name
+            send_shipping_notification_email(
+                to=recipient,
+                first_name=first_name,
+                order_number=order.order_number,
+                tracking_number=tracking_number,
+                tracking_url=tracking_url,
+                carrier=carrier,
             )
         except Exception:
             pass

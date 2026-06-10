@@ -41,5 +41,18 @@ celery_app.conf.update(
             "task": "app.workers.tasks.sync_all_suppliers",
             "schedule": crontab(minute=0, hour="*/12"),
         },
+        # --- Email automation ---
+        "cart-abandonment-emails": {
+            "task": "app.workers.tasks.send_cart_abandonment_emails",
+            "schedule": crontab(minute=0),          # every hour
+        },
+        "review-request-emails": {
+            "task": "app.workers.tasks.send_review_request_emails",
+            "schedule": crontab(minute=0, hour=10),  # daily at 10:00 UTC
+        },
+        "win-back-emails": {
+            "task": "app.workers.tasks.send_win_back_emails",
+            "schedule": crontab(minute=0, hour=11),  # daily at 11:00 UTC
+        },
     },
 )

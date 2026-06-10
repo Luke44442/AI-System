@@ -260,3 +260,187 @@ def bulk_generate_listings(product_ids: list[str], platform: str = "website"):
         result = generate_ai_listing_task.delay(pid, platform)
         results.append({"product_id": pid, "task_id": result.id})
     return results
+
+
+# ---------------------------------------------------------------------------
+# Email automation tasks
+# ---------------------------------------------------------------------------
+
+@celery_app.task
+def send_cart_abandonment_emails():
+    """Email customers whose carts have been idle for 1–25 hours.
+
+    Uses a sliding window (1h–25h since last update) to avoid re-sending on
+    every run without requiring a separate DB column.
+    """
+    async def _run():
+        from datetime import datetime, timedelta, timezone
+        from app.database import AsyncSessionLocal
+        from app.models.customer import Cart, Customer
+        from app.models.product import Product
+        from app.services.email import send_cart_abandonment_email
+        from sqlalchemy import select
+        from sqlalchemy.orm import selectinload
+
+        now = datetime.now(timezone.utc)
+        window_start = now - timedelta(hours=25)
+        window_end = now - timedelta(hours=1)
+
+        async with AsyncSessionLocal() as db:
+            rows = await db.execute(
+                select(Cart)
+                .where(
+                    Cart.updated_at >= window_start,
+                    Cart.updated_at <= window_end,
+                    Cart.customer_id.isnot(None),
+                )
+                .options(
+                    selectinload(Cart.items),
+                    selectinload(Cart.customer),
+                )
+            )
+            carts = rows.scalars().all()
+            sent = 0
+            for cart in carts:
+                if not cart.items or not cart.customer:
+                    continue
+                customer = cart.customer
+                if not customer.marketing_consent or not customer.is_active:
+                    continue
+
+                # Build items list by fetching product names for the cart
+                product_ids = [item.product_id for item in cart.items]
+                prod_rows = await db.execute(
+                    select(Product.id, Product.name, Product.website_price)
+                    .where(Product.id.in_(product_ids))
+                )
+                products_by_id = {p.id: {"name": p.name, "price": p.website_price} for p in prod_rows}
+                items = [
+                    {
+                        "name": products_by_id.get(item.product_id, {}).get("name", "Item"),
+                        "quantity": item.quantity,
+                        "unit_price": float(products_by_id.get(item.product_id, {}).get("price", 0) or 0),
+                    }
+                    for item in cart.items
+                ]
+
+                try:
+                    send_cart_abandonment_email(
+                        to=customer.email,
+                        first_name=customer.first_name,
+                        items=items,
+                    )
+                    sent += 1
+                except Exception as exc:
+                    logger.warning("cart_abandonment_email_failed customer=%s error=%s", customer.id, exc)
+
+            logger.info("cart_abandonment_run sent=%d total_carts=%d", sent, len(carts))
+            return {"sent": sent, "evaluated": len(carts)}
+
+    return _run_async(_run())
+
+
+@celery_app.task
+def send_review_request_emails():
+    """Ask customers to review orders that were fulfilled ~7 days ago."""
+    async def _run():
+        from datetime import datetime, timedelta, timezone
+        from app.database import AsyncSessionLocal
+        from app.models.order import Order
+        from app.models.customer import Customer
+        from app.services.email import send_review_request_email
+        from sqlalchemy import select
+        from sqlalchemy.orm import selectinload
+
+        now = datetime.now(timezone.utc)
+        # Daily window: orders fulfilled between 7d+1h and 7d ago
+        window_start = now - timedelta(days=7, hours=1)
+        window_end = now - timedelta(days=7)
+
+        async with AsyncSessionLocal() as db:
+            rows = await db.execute(
+                select(Order)
+                .where(
+                    Order.created_at >= window_start,
+                    Order.created_at <= window_end,
+                    Order.fulfillment_status.in_(["shipped", "fulfilled", "delivered"]),
+                    Order.customer_id.isnot(None),
+                )
+                .options(selectinload(Order.items), selectinload(Order.customer))
+            )
+            orders = rows.scalars().all()
+            sent = 0
+            for order in orders:
+                customer = order.customer
+                if not customer or not customer.marketing_consent or not customer.is_active:
+                    continue
+                items = [{"name": i.name} for i in order.items]
+                try:
+                    send_review_request_email(
+                        to=customer.email,
+                        first_name=customer.first_name,
+                        order_number=order.order_number,
+                        items=items,
+                    )
+                    sent += 1
+                except Exception as exc:
+                    logger.warning("review_request_email_failed order=%s error=%s", order.order_number, exc)
+
+            logger.info("review_request_run sent=%d", sent)
+            return {"sent": sent, "evaluated": len(orders)}
+
+    return _run_async(_run())
+
+
+@celery_app.task
+def send_win_back_emails():
+    """Re-engage customers whose last order was 90–91 days ago."""
+    async def _run():
+        from datetime import datetime, timedelta, timezone
+        from app.database import AsyncSessionLocal
+        from app.models.order import Order
+        from app.models.customer import Customer
+        from app.services.email import send_win_back_email
+        from sqlalchemy import select, func, and_
+
+        now = datetime.now(timezone.utc)
+        # Target customers whose most recent order falls in a 1-day window 90 days ago.
+        # Running daily ensures each qualifying customer is contacted exactly once.
+        window_start = now - timedelta(days=91)
+        window_end = now - timedelta(days=90)
+
+        async with AsyncSessionLocal() as db:
+            # Subquery: find customers whose last order was in the target window
+            last_order_sq = (
+                select(Order.customer_id, func.max(Order.created_at).label("last_order"))
+                .where(Order.customer_id.isnot(None))
+                .group_by(Order.customer_id)
+                .subquery()
+            )
+            rows = await db.execute(
+                select(Customer)
+                .join(last_order_sq, Customer.id == last_order_sq.c.customer_id)
+                .where(
+                    last_order_sq.c.last_order >= window_start,
+                    last_order_sq.c.last_order <= window_end,
+                    Customer.marketing_consent == True,  # noqa: E712
+                    Customer.is_active == True,          # noqa: E712
+                )
+            )
+            customers = rows.scalars().all()
+            sent = 0
+            for customer in customers:
+                try:
+                    send_win_back_email(
+                        to=customer.email,
+                        first_name=customer.first_name,
+                        days_inactive=90,
+                    )
+                    sent += 1
+                except Exception as exc:
+                    logger.warning("win_back_email_failed customer=%s error=%s", customer.id, exc)
+
+            logger.info("win_back_run sent=%d", sent)
+            return {"sent": sent, "evaluated": len(customers)}
+
+    return _run_async(_run())
