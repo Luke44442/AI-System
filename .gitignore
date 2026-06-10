@@ -49,3 +49,4 @@ playwright-report/
 # Node (if dashboard gets a build step)
 node_modules/
 .next/
+tsconfig.tsbuildinfo
