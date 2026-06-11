@@ -5,7 +5,6 @@ import { productsApi, collectionsApi } from "@/lib/api";
 import ProductCard from "@/components/product/ProductCard";
 import NewsletterForm from "@/components/NewsletterForm";
 import RecommendationRow from "@/components/product/RecommendationRow";
-import { recommendationsApi } from "@/lib/api";
 import type { Product, Collection } from "@/types";
 
 export const metadata: Metadata = {
@@ -143,7 +142,7 @@ export default async function HomePage() {
           <RecommendationRow
             title="Trending Now"
             subtitle="What Aurevia shoppers are loving"
-            load={() => recommendationsApi.trending(8)}
+            source={{ kind: "trending", limit: 8 }}
           />
         </div>
       </section>

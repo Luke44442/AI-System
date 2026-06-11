@@ -201,3 +201,141 @@ export const analyticsApi = {
   resolveAlert: (alertId: string) =>
     api.post(`/analytics/pricing-alerts/${alertId}/resolve`).then((r) => r.data),
 };
+
+// ---------------------------------------------------------------------------
+// System health, supplier queue, marketplace sync (admin)
+// ---------------------------------------------------------------------------
+
+export interface SystemEventRow {
+  id: string; event_type: string; severity: string;
+  message: string | null; payload?: Record<string, unknown>;
+  order_id: string | null; listing_id: string | null; product_id: string | null;
+  created_at: string | null;
+}
+
+export interface FailuresDashboard {
+  counts: {
+    failed_supplier_orders: number;
+    supplier_queue_backlog: number;
+    dead_letter_listings: number;
+    retrying_listings: number;
+    orphaned_paid_orders: number;
+  };
+  healthy: boolean;
+  recent_errors: SystemEventRow[];
+}
+
+export interface SupplierQueueItem {
+  id: string; order_id: string; order_number: string | null;
+  order_total: string | null; customer_name: string | null;
+  supplier_id: string | null; status: string;
+  external_order_id: string | null; external_status: string | null;
+  tracking_number: string | null;
+  failure_reason: string | null; queued_reason: string | null;
+  attempts: number; last_attempt_at: string | null; created_at: string | null;
+}
+
+export interface DeadLetterRow {
+  id: string; listing_id: string | null; product_id: string | null;
+  platform: string; operation: string; attempts: number;
+  last_error: string | null; is_resolved: boolean; created_at: string | null;
+}
+
+export const systemApi = {
+  failures: () => api.get<FailuresDashboard>("/system/failures").then((r) => r.data),
+  events: (params?: { severity?: string; event_type?: string; order_id?: string; limit?: number }) =>
+    api.get<{ items: SystemEventRow[] }>("/system/events", { params }).then((r) => r.data),
+  supplierQueue: (status?: string) =>
+    api.get<{ items: SupplierQueueItem[]; count: number }>("/system/supplier-queue", { params: { status } }).then((r) => r.data),
+  retryQueueItem: (id: string) =>
+    api.post<SupplierQueueItem>(`/system/supplier-queue/${id}/retry`).then((r) => r.data),
+  resolveQueueItem: (id: string, external_order_id?: string, note?: string) =>
+    api.post<SupplierQueueItem>(`/system/supplier-queue/${id}/resolve`, { external_order_id, note }).then((r) => r.data),
+  deadLetters: () =>
+    api.get<{ items: DeadLetterRow[] }>("/system/dead-letters").then((r) => r.data),
+  retryDeadLetter: (id: string) =>
+    api.post(`/system/dead-letters/${id}/retry`).then((r) => r.data),
+  resolveDeadLetter: (id: string) =>
+    api.post(`/system/dead-letters/${id}/resolve`).then((r) => r.data),
+};
+
+export interface MarketplaceListingRow {
+  id: string; product_id: string; platform: string;
+  listing_id: string | null; status: string; price: string | null;
+  listing_url: string | null; last_synced_at: string | null;
+}
+
+export interface PlatformStatus {
+  platform: string;
+  configured: boolean;
+  supports_inventory_sync: boolean;
+  supports_price_sync: boolean;
+  supports_order_sync: boolean;
+}
+
+export interface MarketplaceHealth {
+  platforms: PlatformStatus[];
+  listing_counts: Record<string, Record<string, number>>;
+  recent_failures: {
+    platform: string; product_id: string; status?: string;
+    attempts?: number; error: string | null; next_retry_at?: string | null;
+    last_synced_at: string | null;
+  }[];
+  dead_letter_count: number;
+}
+
+export const marketplaceApi = {
+  status: () => api.get<MarketplaceHealth>("/marketplace/status").then((r) => r.data),
+  listings: (params?: { platform?: string; status?: string; page?: number; page_size?: number }) =>
+    api.get<PaginatedResponse<MarketplaceListingRow>>("/marketplace/listings", { params }).then((r) => r.data),
+  syncProduct: (productId: string) =>
+    api.post(`/marketplace/sync/${productId}`).then((r) => r.data),
+  syncAll: () => api.post("/marketplace/sync-all").then((r) => r.data),
+};
+
+export interface AdminOrderRow {
+  id: string; order_number: string; customer_id: string | null;
+  customer_name: string | null; channel: string; status: string;
+  payment_status: string; fulfillment_status: string;
+  total: number; currency: string; item_count: number;
+}
+
+export const adminApi = {
+  orders: (params?: { search?: string; status?: string; payment_status?: string; channel?: string; page?: number; page_size?: number }) =>
+    api.get<PaginatedResponse<AdminOrderRow>>("/orders", { params }).then((r) => r.data),
+  order: (id: string) => api.get<Order>(`/orders/${id}`).then((r) => r.data),
+  fulfillOrder: (id: string) => api.post(`/orders/${id}/fulfill`).then((r) => r.data),
+  setTracking: (id: string, tracking_number: string, carrier?: string) =>
+    api.post(`/orders/${id}/tracking`, { tracking_number, carrier }).then((r) => r.data),
+  customers: (params?: { search?: string; page?: number; page_size?: number }) =>
+    api.get<{ items: { id: string; email: string; first_name: string | null; last_name: string | null; order_count: number; total_spent: string; is_active: boolean; marketing_consent: boolean; created_at: string | null }[]; total: number }>("/customers", { params }).then((r) => r.data),
+  products: (params?: ProductParams) =>
+    api.get<PaginatedResponse<Product>>("/products", { params }).then((r) => r.data),
+  uploadProductImage: (file: File, productId?: string, isPrimary = false) => {
+    const form = new FormData();
+    form.append("file", file);
+    const params = new URLSearchParams();
+    if (productId) params.set("product_id", productId);
+    if (isPrimary) params.set("is_primary", "true");
+    return api.post(`/upload/product-image?${params.toString()}`, form, {
+      headers: { "Content-Type": "multipart/form-data" },
+    }).then((r) => r.data);
+  },
+};
+
+export interface EmailSubscriberRow {
+  id: string; email: string; first_name: string | null;
+  status: string; source: string | null; subscribed_at: string | null;
+  open_count: number; click_count: number;
+}
+
+export const emailAdminApi = {
+  subscriberCount: () =>
+    api.get<{ total: number; subscribed: number; unsubscribed: number; bounced: number }>("/email/subscribers/count").then((r) => r.data),
+  subscribers: (params?: { status?: string; limit?: number; offset?: number }) =>
+    api.get<{ total: number; items: EmailSubscriberRow[] }>("/email/subscribers", { params }).then((r) => r.data),
+  runAutomation: (name: "cart-abandonment" | "review-requests" | "win-back") =>
+    api.post<{ task_id: string; status: string }>(`/email/automations/${name}/run`).then((r) => r.data),
+  sendTest: (to: string, template = "welcome") =>
+    api.post("/email/test", { to, template }).then((r) => r.data),
+};

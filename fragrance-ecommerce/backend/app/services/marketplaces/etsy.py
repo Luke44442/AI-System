@@ -20,18 +20,21 @@ class EtsyAdapter(MarketplaceAdapter):
         return EtsyClient()
 
     def _build_payload(self, p: ProductPayload) -> dict:
-        return {
+        payload = {
             "quantity": max(p.quantity, 1),
             "title": p.title[:140],
             "description": p.description or p.title,
             "price": float(p.price),
             "who_made": "someone_else",
             "when_made": "2020_2024",
-            "taxonomy_id": 1,  # generic; refine per real Etsy taxonomy
+            "taxonomy_id": settings.ETSY_TAXONOMY_ID,
             "tags": (p.tags or [])[:13],
             "should_auto_renew": True,
             "state": "active",
         }
+        if settings.ETSY_SHIPPING_PROFILE_ID:
+            payload["shipping_profile_id"] = int(settings.ETSY_SHIPPING_PROFILE_ID)
+        return payload
 
     def create_listing(self, product: ProductPayload) -> SyncResult:
         if not self.is_configured():
@@ -40,13 +43,21 @@ class EtsyAdapter(MarketplaceAdapter):
             client = self._client()
             resp = client.create_listing(settings.ETSY_SHOP_ID, self._build_payload(product))
             listing_id = str(resp.get("listing_id") or resp.get("results", [{}])[0].get("listing_id", ""))
-            if listing_id and product.images:
+            if not listing_id:
+                return self._failed("Etsy returned success but no listing_id", raw=resp)
+            # Image upload failures must be surfaced, not buried: a listing
+            # without images converts terribly, so we report a partial result.
+            image_warning = None
+            if product.images:
                 try:
-                    client.upload_listing_image(settings.ETSY_SHOP_ID, listing_id, product.images[0])
-                except Exception:
-                    pass
-            url = f"https://www.etsy.com/listing/{listing_id}" if listing_id else None
-            return self._success(listing_id=listing_id or None, url=url, raw=resp)
+                    for rank, image_url in enumerate(product.images[:10], start=1):
+                        client.upload_listing_image(settings.ETSY_SHOP_ID, listing_id, image_url, rank=rank)
+                except Exception as exc:
+                    image_warning = f"Listing created but image upload failed: {exc}"
+            url = f"https://www.etsy.com/listing/{listing_id}"
+            result = self._success(listing_id=listing_id, url=url, raw=resp)
+            result.message = image_warning
+            return result
         except Exception as exc:
             return self._failed(str(exc))
 

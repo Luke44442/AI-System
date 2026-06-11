@@ -20,11 +20,47 @@ from app.schemas.customer import (
     ForgotPasswordRequest, ResetPasswordRequest,
 )
 from app.schemas.common import SuccessResponse
-from app.core.auth import hash_password, verify_password, create_access_token, get_current_user
+from app.core.auth import hash_password, verify_password, create_access_token, get_current_user, get_current_admin
 from app.services.email import send_password_reset_email, send_welcome_email
 
 router = APIRouter(prefix="/customers", tags=["customers"])
 auth_router = APIRouter(prefix="/auth", tags=["auth"])
+
+
+@router.get("", dependencies=[Depends(get_current_admin)])
+async def list_customers(
+    search: str | None = None,
+    page: int = 1,
+    page_size: int = 50,
+    db: AsyncSession = Depends(get_db),
+):
+    """Admin: paginated customer list for the back office."""
+    from sqlalchemy import func, or_
+    query = select(Customer)
+    if search:
+        like = f"%{search}%"
+        query = query.where(or_(
+            Customer.email.ilike(like),
+            Customer.first_name.ilike(like),
+            Customer.last_name.ilike(like),
+        ))
+    total = (await db.execute(select(func.count()).select_from(query.subquery()))).scalar_one()
+    page = max(page, 1)
+    page_size = min(max(page_size, 1), 200)
+    rows = await db.execute(
+        query.order_by(Customer.created_at.desc()).offset((page - 1) * page_size).limit(page_size)
+    )
+    return {
+        "total": total, "page": page, "page_size": page_size,
+        "items": [
+            {"id": str(c.id), "email": c.email, "first_name": c.first_name,
+             "last_name": c.last_name, "order_count": c.order_count,
+             "total_spent": str(c.total_spent or 0), "is_active": c.is_active,
+             "marketing_consent": c.marketing_consent,
+             "created_at": c.created_at.isoformat() if c.created_at else None}
+            for c in rows.scalars().all()
+        ],
+    }
 
 
 async def _get_or_create_cart(db: AsyncSession, customer: Customer) -> Cart:

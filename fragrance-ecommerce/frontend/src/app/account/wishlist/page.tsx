@@ -13,7 +13,7 @@ import type { Product } from '@/types'
 
 export default function WishlistPage() {
   const router = useRouter()
-  const user = useAuthStore((s) => s.user)
+  const user = useAuthStore((s) => s.customer)
   const addItem = useCartStore((s) => s.addItem)
   const [wishlist, setWishlist] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
@@ -79,7 +79,7 @@ export default function WishlistPage() {
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {wishlist.map((product) => {
               const brandName = (product as any).brand?.name || ''
-              const imageUrl = getProductImage(product.images?.[0]?.url)
+              const imageUrl = getProductImage(product)
               return (
                 <div key={product.id} className="group relative bg-obsidian-800 rounded-lg overflow-hidden border border-obsidian-700 hover:border-gold-600 transition-colors">
                   <Link href={`/products/${product.slug}`}>
@@ -94,7 +94,7 @@ export default function WishlistPage() {
                     <div className="p-4">
                       {brandName && <p className="text-gold-400 text-xs uppercase tracking-wider mb-1">{brandName}</p>}
                       <p className="text-cream text-sm font-medium line-clamp-2">{product.name}</p>
-                      <p className="text-cream font-semibold mt-2">{formatPrice(product.website_price)}</p>
+                      <p className="text-cream font-semibold mt-2">{formatPrice(product.website_price ?? 0)}</p>
                     </div>
                   </Link>
                   <div className="px-4 pb-4 space-y-2">

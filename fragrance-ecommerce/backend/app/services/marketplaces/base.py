@@ -24,6 +24,23 @@ class SyncStatus(str, Enum):
     NOT_SUPPORTED = "not_supported"
 
 
+class ListingState(str, Enum):
+    """Per-platform listing state machine persisted in marketplace_listings.status.
+
+        created → uploaded → published
+                       ↘ failed → retrying → published
+                                       ↘ dead (after retry budget — dead-letter table)
+        pending = adapter not configured yet (credentials missing)
+    """
+    CREATED = "created"
+    UPLOADED = "uploaded"
+    PUBLISHED = "published"
+    FAILED = "failed"
+    RETRYING = "retrying"
+    DEAD = "dead"
+    PENDING = "pending"
+
+
 @dataclass
 class ProductPayload:
     """Normalized product view passed to adapters (decoupled from the ORM)."""

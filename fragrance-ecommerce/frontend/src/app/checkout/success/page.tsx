@@ -1,11 +1,20 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { useCartStore } from '@/stores/cart'
 
 export default function CheckoutSuccessPage() {
+  // useSearchParams requires a Suspense boundary for static prerendering.
+  return (
+    <Suspense fallback={<div className="pt-32 text-center text-gray-400 text-sm">Confirming your order…</div>}>
+      <CheckoutSuccessInner />
+    </Suspense>
+  )
+}
+
+function CheckoutSuccessInner() {
   const searchParams = useSearchParams()
   const orderId = searchParams.get('order_id')
   const orderNumber = searchParams.get('order_number')

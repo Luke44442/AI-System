@@ -19,7 +19,7 @@ const STATUS_STYLES: Record<string, string> = {
 export default function OrderDetailPage() {
   const params = useParams()
   const router = useRouter()
-  const user = useAuthStore((s) => s.user)
+  const user = useAuthStore((s) => s.customer)
   const [order, setOrder] = useState<any>(null)
   const [loading, setLoading] = useState(true)
 

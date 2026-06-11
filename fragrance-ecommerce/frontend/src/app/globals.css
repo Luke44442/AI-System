@@ -38,7 +38,8 @@
   }
 
   .card-product {
-    @apply group relative bg-white overflow-hidden cursor-pointer;
+    /* `group` can't be @apply'd — it's added at the usage site */
+    @apply relative bg-white overflow-hidden cursor-pointer;
   }
 
   .section-title {

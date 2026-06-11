@@ -41,6 +41,19 @@ celery_app.conf.update(
             "task": "app.workers.tasks.sync_all_suppliers",
             "schedule": crontab(minute=0, hour="*/12"),
         },
+        # --- Fulfillment reliability ---
+        "track-supplier-orders": {
+            "task": "app.workers.tasks.track_supplier_orders_task",
+            "schedule": crontab(minute="*/30"),     # poll supplier order status
+        },
+        "retry-failed-listings": {
+            "task": "app.workers.tasks.retry_failed_listings",
+            "schedule": crontab(minute="*/10"),     # drain the listing retry queue
+        },
+        "reconcile-stuck-orders": {
+            "task": "app.workers.tasks.reconcile_stuck_orders",
+            "schedule": crontab(minute=15),         # hourly safety net
+        },
         # --- Email automation ---
         "cart-abandonment-emails": {
             "task": "app.workers.tasks.send_cart_abandonment_emails",

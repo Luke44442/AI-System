@@ -14,3 +14,6 @@ from app.models.analytics import (  # noqa: F401
 from app.models.content import (  # noqa: F401
     ProductEnrichment, ContentItem, TikTokContent, EmailSubscriber,
 )
+from app.models.fulfillment import (  # noqa: F401
+    SupplierOrder, SystemEvent, MarketplaceDeadLetter,
+)

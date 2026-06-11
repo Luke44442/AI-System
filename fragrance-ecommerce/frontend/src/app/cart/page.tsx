@@ -45,7 +45,7 @@ export default function CartPage() {
           {/* Items */}
           <div className="lg:col-span-2 space-y-4">
             {items.map((item) => {
-              const imageUrl = getProductImage(item.product.images?.[0]?.url)
+              const imageUrl = getProductImage(item.product)
               const brandName = (item.product as any).brand?.name || ''
               const price = item.variant?.website_price ?? item.product.website_price
 
@@ -74,7 +74,7 @@ export default function CartPage() {
                     {item.variant && (
                       <p className="text-obsidian-400 text-xs mt-0.5">{item.variant.name}</p>
                     )}
-                    <p className="text-cream font-semibold mt-1">{formatPrice(price)}</p>
+                    <p className="text-cream font-semibold mt-1">{formatPrice(price ?? 0)}</p>
                   </div>
 
                   <div className="flex flex-col items-end gap-2">

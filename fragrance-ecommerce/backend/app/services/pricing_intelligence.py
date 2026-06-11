@@ -5,18 +5,12 @@ from decimal import Decimal, ROUND_HALF_UP
 from typing import Optional
 
 
+from app.services.pricing_engine import get_fee_model
+
 _TWO = Decimal("0.01")
 _FOUR = Decimal("0.0001")
 
-# Platform fee rates (percentage of revenue)
-_PLATFORM_FEES: dict[str, Decimal] = {
-    "website": Decimal("0"),
-    "etsy": Decimal("0.065"),
-    "ebay": Decimal("0.12"),
-    "facebook": Decimal("0.05"),
-}
-
-# Stripe fee constants
+# Stripe fee constants (our own website's payment processor)
 _STRIPE_RATE = Decimal("0.029")          # 2.9%
 _STRIPE_FIXED = Decimal("0.30")          # $0.30 per transaction
 
@@ -64,10 +58,15 @@ def calculate_order_profitability(
     supplier_cost = _round2(supplier_cost)
     shipping_cost = _round2(shipping_cost)
 
-    fee_rate = _PLATFORM_FEES.get(channel, Decimal("0"))
-    platform_fee = _round2(revenue * fee_rate)
-
-    stripe_fee = _round2(revenue * _STRIPE_RATE + _STRIPE_FIXED)
+    # Marketplace orders are paid through the platform's own processor (Etsy
+    # Payments, eBay Managed Payments, ...) — those costs live in the channel
+    # fee model. Stripe only applies to orders on our own website.
+    if channel == "website":
+        platform_fee = Decimal("0.00")
+        stripe_fee = _round2(revenue * _STRIPE_RATE + _STRIPE_FIXED)
+    else:
+        platform_fee = get_fee_model(channel).total_fees(revenue)
+        stripe_fee = Decimal("0.00")
 
     other_fees = Decimal("0.00")
 

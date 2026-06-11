@@ -19,6 +19,7 @@ from sqlalchemy.orm import selectinload
 from app.models.order import Order, OrderItem
 from app.models.product import Product
 from app.models.analytics import OrderProfitability
+from app.services.events import record_event
 from app.services.pricing_intelligence import calculate_order_profitability
 from app.services.email import (
     send_order_confirmation_email,
@@ -26,6 +27,21 @@ from app.services.email import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+def _dispatch_supplier_order(order_id) -> str:
+    """Queue supplier ordering via Celery; report how it was dispatched.
+
+    Returns 'queued' on success, 'inline_required' when the broker is down so
+    the caller can run the orchestrator inline instead of dropping the order.
+    """
+    try:
+        from app.workers.tasks import place_supplier_order_task
+        place_supplier_order_task.delay(str(order_id))
+        return "queued"
+    except Exception as exc:
+        logger.error("supplier_order_dispatch_failed order=%s error=%s", order_id, exc)
+        return "inline_required"
 
 
 async def _assign_supplier(db: AsyncSession, order: Order) -> None:
@@ -77,9 +93,23 @@ async def process_paid_order(db: AsyncSession, order: Order) -> dict:
     # 4. Record profitability snapshot for analytics
     await _record_profitability(db, order)
 
+    await record_event(
+        db, "order_fulfillment_started", severity="info",
+        message=f"Order {order.order_number} entered fulfillment",
+        order_id=order.id,
+        payload={"supplier_id": str(order.supplier_id) if order.supplier_id else None},
+    )
     await db.commit()
 
-    # 5. Customer notification (best-effort)
+    # 5. Place the supplier order — async via Celery, inline if the broker is
+    # down. Either way the order is guaranteed to reach a terminal supplier
+    # state (placed / failed / manual_queue); nothing stops at "processing".
+    dispatch = _dispatch_supplier_order(order.id)
+    if dispatch == "inline_required":
+        from app.services.supplier_orchestrator import place_order as place_supplier_order
+        await place_supplier_order(db, order)
+
+    # 6. Customer notification (best-effort)
     recipient = order.guest_email or (order.customer.email if order.customer else None)
     if recipient:
         try:
@@ -121,6 +151,12 @@ async def assign_tracking(db: AsyncSession, order: Order, tracking_number: str,
     order.fulfillment_status = "shipped"
     if order.status == "processing":
         order.status = "shipped"
+    await record_event(
+        db, "order_shipped", severity="info",
+        message=f"Order {order.order_number} shipped via {carrier or 'carrier'} ({tracking_number})",
+        order_id=order.id,
+        payload={"tracking_number": tracking_number, "carrier": carrier},
+    )
     await db.commit()
 
     recipient = order.guest_email or (order.customer.email if order.customer else None)

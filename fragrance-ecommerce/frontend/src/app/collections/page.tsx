@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import { collectionsApi } from "@/lib/api";
+import type { Collection } from "@/types";
 
 export const metadata: Metadata = {
   title: "Collections | Aurevia",
@@ -11,7 +12,7 @@ export const metadata: Metadata = {
 export const revalidate = 3600;
 
 export default async function CollectionsPage() {
-  let collections = [];
+  let collections: Collection[] = [];
   try {
     collections = await collectionsApi.list();
   } catch {}

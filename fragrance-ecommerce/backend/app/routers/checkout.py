@@ -276,6 +276,18 @@ async def stripe_webhook(request: Request, db: AsyncSession = Depends(get_db)):
                     await process_paid_order(db, order)
                 except Exception as exc:  # never fail the webhook on fulfillment errors
                     log.error("fulfillment_failed", order_id=order_id, error=str(exc))
+                    # Surface on the failures dashboard — the hourly
+                    # reconcile_stuck_orders sweep will re-dispatch this order.
+                    try:
+                        from app.services.events import record_event
+                        await record_event(
+                            db, "fulfillment_pipeline_error", severity="critical",
+                            message=f"process_paid_order crashed for {order.order_number}: {exc}",
+                            order_id=order.id,
+                        )
+                        await db.commit()
+                    except Exception:
+                        pass
 
     elif event["type"] == "payment_intent.payment_failed":
         pi = event["data"]["object"]

@@ -1,12 +1,21 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { productsApi } from '@/lib/api'
 import ProductGrid from '@/components/product/ProductGrid'
 import type { Product } from '@/types'
 
 export default function SearchPage() {
+  // useSearchParams requires a Suspense boundary for static prerendering.
+  return (
+    <Suspense fallback={<div className="pt-32 text-center text-gray-400 text-sm">Loading search…</div>}>
+      <SearchPageInner />
+    </Suspense>
+  )
+}
+
+function SearchPageInner() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const inputRef = useRef<HTMLInputElement>(null)
@@ -33,8 +42,8 @@ export default function SearchPage() {
     setLoading(true)
     try {
       const res = await productsApi.list({ search: q, page_size: 40 })
-      setProducts(res.data.items || [])
-      setTotal(res.data.total || 0)
+      setProducts(res.items || [])
+      setTotal(res.total || 0)
     } catch {
       setProducts([])
     } finally {
@@ -46,7 +55,7 @@ export default function SearchPage() {
     setLoading(true)
     try {
       const res = await productsApi.list({ is_featured: true, page_size: 20 })
-      setProducts(res.data.items || [])
+      setProducts(res.items || [])
       setTotal(0)
     } catch {
       setProducts([])

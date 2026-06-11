@@ -219,6 +219,139 @@ def process_order_fulfillment(self, order_id: str):
         raise self.retry(exc=exc)
 
 
+@celery_app.task(bind=True, max_retries=3, default_retry_delay=120)
+def place_supplier_order_task(self, order_id: str):
+    """Drive a paid order to a terminal supplier state (placed/failed/queued).
+
+    The orchestrator is idempotent, so Celery retries cannot double-order.
+    If even the task machinery fails repeatedly, the order is force-queued
+    for manual handling rather than left dangling.
+    """
+    async def _run():
+        from app.database import AsyncSessionLocal
+        from app.models.order import Order
+        from app.services.supplier_orchestrator import place_order
+        from sqlalchemy import select
+        from sqlalchemy.orm import selectinload
+        import uuid
+
+        async with AsyncSessionLocal() as db:
+            result = await db.execute(
+                select(Order).where(Order.id == uuid.UUID(order_id))
+                .options(selectinload(Order.items), selectinload(Order.customer))
+            )
+            order = result.scalar_one_or_none()
+            if not order:
+                return {"error": "Order not found"}
+            so = await place_order(db, order)
+            return {"order_id": order_id, "supplier_order_status": so.status,
+                    "external_order_id": so.external_order_id}
+
+    async def _force_queue():
+        from app.database import AsyncSessionLocal
+        from app.models.order import Order
+        from app.services.supplier_orchestrator import fallback_to_manual_queue
+        from sqlalchemy import select
+        import uuid
+
+        async with AsyncSessionLocal() as db:
+            result = await db.execute(select(Order).where(Order.id == uuid.UUID(order_id)))
+            order = result.scalar_one_or_none()
+            if order:
+                await fallback_to_manual_queue(
+                    db, order, "Supplier ordering task crashed repeatedly — needs human review"
+                )
+
+    try:
+        return _run_async(_run())
+    except Exception as exc:
+        logger.error(f"Supplier order task failed for {order_id}: {exc}")
+        if self.request.retries >= self.max_retries:
+            try:
+                _run_async(_force_queue())
+            except Exception as queue_exc:  # last line of defense
+                logger.critical(f"Could not even queue order {order_id} manually: {queue_exc}")
+        raise self.retry(exc=exc)
+
+
+@celery_app.task(bind=True, max_retries=2, default_retry_delay=120)
+def track_supplier_orders_task(self):
+    """Poll suppliers for status on all open supplier orders."""
+    async def _run():
+        from app.database import AsyncSessionLocal
+        from app.models.fulfillment import SupplierOrder
+        from app.services.supplier_orchestrator import track_order
+        from sqlalchemy import select
+
+        async with AsyncSessionLocal() as db:
+            rows = await db.execute(
+                select(SupplierOrder).where(SupplierOrder.status == "placed").limit(200)
+            )
+            supplier_orders = rows.scalars().all()
+            tracked = 0
+            for so in supplier_orders:
+                try:
+                    await track_order(db, so)
+                    tracked += 1
+                except Exception as exc:
+                    logger.warning("supplier_tracking_error so=%s error=%s", so.id, exc)
+            return {"tracked": tracked, "open": len(supplier_orders)}
+
+    try:
+        return _run_async(_run())
+    except Exception as exc:
+        logger.error(f"Supplier tracking sweep failed: {exc}")
+        raise self.retry(exc=exc)
+
+
+@celery_app.task
+def retry_failed_listings():
+    """Re-sync marketplace listings whose backoff window has elapsed."""
+    async def _run():
+        from app.database import AsyncSessionLocal
+        from app.services.marketplaces.service import retry_due_listings
+        async with AsyncSessionLocal() as db:
+            return await retry_due_listings(db)
+
+    result = _run_async(_run())
+    logger.info(f"Listing retry sweep: {result}")
+    return result
+
+
+@celery_app.task
+def reconcile_stuck_orders():
+    """Safety net: any paid order with no supplier_order row gets one dispatched.
+
+    This catches orders that slipped through (e.g. webhook fired while the
+    worker was down) — the exact failure mode that used to be silent.
+    """
+    async def _run():
+        from app.database import AsyncSessionLocal
+        from app.models.order import Order
+        from app.models.fulfillment import SupplierOrder
+        from sqlalchemy import select
+
+        async with AsyncSessionLocal() as db:
+            rows = await db.execute(
+                select(Order.id)
+                .outerjoin(SupplierOrder, SupplierOrder.order_id == Order.id)
+                .where(
+                    Order.payment_status == "paid",
+                    Order.fulfillment_status.in_(["unfulfilled", "processing"]),
+                    SupplierOrder.id.is_(None),
+                )
+                .limit(100)
+            )
+            return [str(r[0]) for r in rows.all()]
+
+    order_ids = _run_async(_run())
+    for oid in order_ids:
+        place_supplier_order_task.delay(oid)
+    if order_ids:
+        logger.warning(f"Reconciled {len(order_ids)} stuck paid orders into supplier pipeline")
+    return {"dispatched": len(order_ids)}
+
+
 @celery_app.task(bind=True, max_retries=2, default_retry_delay=300)
 def sync_supplier_costs_task(self, supplier_slug: str):
     async def _run():

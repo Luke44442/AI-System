@@ -29,7 +29,7 @@ export default function ProductCard({ product, className }: ProductCardProps) {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className={cn("card-product", className)}
+      className={cn("group card-product", className)}
     >
       <div className="relative aspect-[3/4] overflow-hidden bg-cream-100">
         <Link href={`/products/${product.slug}`}>
@@ -115,7 +115,13 @@ export default function ProductCard({ product, className }: ProductCardProps) {
           <p className="text-[10px] text-red-500 tracking-wider uppercase mt-1">Out of Stock</p>
         )}
         {product.inventory_status === "low_stock" && (
-          <p className="text-[10px] text-amber-600 tracking-wider uppercase mt-1">Low Stock</p>
+          <p className="text-[10px] text-amber-600 tracking-wider uppercase mt-1">
+            {product.inventory_quantity === 1
+              ? "Last one — 1 left"
+              : product.inventory_quantity > 0 && product.inventory_quantity <= 5
+                ? `Only ${product.inventory_quantity} left`
+                : "Low Stock"}
+          </p>
         )}
       </div>
     </motion.div>

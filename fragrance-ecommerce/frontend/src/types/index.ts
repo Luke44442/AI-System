@@ -69,6 +69,8 @@ export interface Product {
   rating_avg?: number;
   review_count: number;
   variants: ProductVariant[];
+  seo_title?: string;
+  seo_description?: string;
 }
 
 export interface Collection {

@@ -38,6 +38,17 @@ class Settings(BaseSettings):
     R2_BUCKET_NAME: Optional[str] = "aurevia-media"
     R2_PUBLIC_URL: Optional[str] = None
 
+    @property
+    def R2_ENDPOINT_URL(self) -> Optional[str]:
+        if not self.R2_ACCOUNT_ID:
+            return None
+        return f"https://{self.R2_ACCOUNT_ID}.r2.cloudflarestorage.com"
+
+    @property
+    def R2_CONFIGURED(self) -> bool:
+        return bool(self.R2_ACCOUNT_ID and self.R2_ACCESS_KEY_ID
+                    and self.R2_SECRET_ACCESS_KEY and self.R2_PUBLIC_URL)
+
     ANTHROPIC_API_KEY: Optional[str] = None
     AI_MODEL: str = "claude-opus-4-8"
 
@@ -47,6 +58,16 @@ class Settings(BaseSettings):
     ETSY_API_KEY: Optional[str] = None
     ETSY_ACCESS_TOKEN: Optional[str] = None
     ETSY_SHOP_ID: Optional[str] = None
+    ETSY_TAXONOMY_ID: int = 1  # set to the real Etsy taxonomy node for your category
+    ETSY_SHIPPING_PROFILE_ID: Optional[str] = None
+
+    # Supplier fulfillment (CJ Dropshipping API)
+    CJ_EMAIL: Optional[str] = None
+    CJ_API_KEY: Optional[str] = None
+
+    # Reliability knobs
+    MARKETPLACE_MAX_SYNC_ATTEMPTS: int = 5
+    SUPPLIER_ORDER_MAX_ATTEMPTS: int = 4
 
     EBAY_APP_ID: Optional[str] = None
     EBAY_CERT_ID: Optional[str] = None

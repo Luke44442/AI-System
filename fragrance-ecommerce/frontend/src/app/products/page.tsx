@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { FunnelIcon, AdjustmentsHorizontalIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { productsApi, brandsApi, categoriesApi } from "@/lib/api";
@@ -18,6 +18,15 @@ const SORT_OPTIONS = [
 ];
 
 export default function ProductsPage() {
+  // useSearchParams requires a Suspense boundary for static prerendering.
+  return (
+    <Suspense fallback={<div className="pt-32 text-center text-gray-400 text-sm">Loading products…</div>}>
+      <ProductsPageInner />
+    </Suspense>
+  );
+}
+
+function ProductsPageInner() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [products, setProducts] = useState<Product[]>([]);

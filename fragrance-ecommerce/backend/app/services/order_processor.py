@@ -68,6 +68,14 @@ async def create_order(db: AsyncSession, payload: OrderCreate) -> Order:
     db.add(order)
     await db.flush()
 
+    from app.services.events import record_event
+    await record_event(
+        db, "order_created", severity="info",
+        message=f"Order {order.order_number} created via {order.channel}",
+        order_id=order.id,
+        payload={"total": str(total), "channel": order.channel},
+    )
+
     if payload.customer_id:
         await db.execute(
             update(Customer)

@@ -13,10 +13,19 @@ export function formatDate(dateString: string): string {
   return new Intl.DateTimeFormat("en-US", { year: "numeric", month: "long", day: "numeric" }).format(new Date(dateString));
 }
 
+export const PRODUCT_PLACEHOLDER = "/placeholder-product.svg";
+
+export function hasRealImage(product: { images?: { url: string }[] }, index = 0): boolean {
+  const img = product.images?.[index]?.url;
+  return Boolean(img && img.startsWith("http"));
+}
+
 export function getProductImage(product: { images?: { url: string }[] }, index = 0): string {
   const img = product.images?.[index]?.url;
   if (img && img.startsWith("http")) return img;
-  return `https://images.unsplash.com/photo-1541643600914-78b084683702?w=600&h=800&fit=crop`;
+  // No real image → branded silhouette placeholder. Never fake a product
+  // photo with stock imagery: it destroys trust at checkout.
+  return PRODUCT_PLACEHOLDER;
 }
 
 export function truncate(str: string, maxLen: number): string {

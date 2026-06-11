@@ -56,7 +56,7 @@ export default function AccountPage() {
     if (!customer) return;
     setOrdersLoading(true);
     ordersApi
-      .myOrders(1)
+      .myOrders({ page: 1 })
       .then((data) => setOrders(data.items.slice(0, 3)))
       .catch(() => setOrdersError(true))
       .finally(() => setOrdersLoading(false));

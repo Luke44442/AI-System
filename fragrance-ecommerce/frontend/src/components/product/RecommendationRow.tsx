@@ -2,26 +2,56 @@
 
 import { useEffect, useState } from 'react'
 import ProductCard from './ProductCard'
+import { recommendationsApi } from '@/lib/api'
 import type { Product } from '@/types'
+
+/** Declarative source — serializable, so server components can render this row. */
+export interface RecommendationSource {
+  kind: 'trending' | 'bestsellers' | 'similar' | 'frequently-bought-together' | 'complete-the-look'
+  productId?: string
+  limit?: number
+  categorySlug?: string
+}
 
 interface RecommendationRowProps {
   title: string
   subtitle?: string
-  /** Async loader returning the products for this row. */
-  load: () => Promise<Product[]>
+  /** Async loader returning the products for this row (client trees only). */
+  load?: () => Promise<Product[]>
+  /** Serializable alternative to `load` — required when rendered from a server component. */
+  source?: RecommendationSource
   /** Hide the whole section if the loader returns nothing. */
   hideWhenEmpty?: boolean
 }
 
+function loadFromSource(source: RecommendationSource): Promise<Product[]> {
+  const limit = source.limit ?? 8
+  switch (source.kind) {
+    case 'trending':
+      return recommendationsApi.trending(limit, source.categorySlug)
+    case 'bestsellers':
+      return recommendationsApi.bestsellers(limit, source.categorySlug)
+    case 'similar':
+      return source.productId ? recommendationsApi.similar(source.productId, limit) : Promise.resolve([])
+    case 'frequently-bought-together':
+      return source.productId ? recommendationsApi.frequentlyBoughtTogether(source.productId, limit) : Promise.resolve([])
+    case 'complete-the-look':
+      return source.productId ? recommendationsApi.completeTheLook(source.productId, limit) : Promise.resolve([])
+    default:
+      return Promise.resolve([])
+  }
+}
+
 /** A titled horizontal-scrolling row of product cards, used for all
  *  recommendation surfaces (similar, complete the look, trending, recently viewed). */
-export default function RecommendationRow({ title, subtitle, load, hideWhenEmpty = true }: RecommendationRowProps) {
+export default function RecommendationRow({ title, subtitle, load, source, hideWhenEmpty = true }: RecommendationRowProps) {
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     let active = true
-    load()
+    const loader = load ?? (source ? () => loadFromSource(source) : () => Promise.resolve([]))
+    loader()
       .then((p) => { if (active) setProducts(p || []) })
       .catch(() => { if (active) setProducts([]) })
       .finally(() => { if (active) setLoading(false) })
