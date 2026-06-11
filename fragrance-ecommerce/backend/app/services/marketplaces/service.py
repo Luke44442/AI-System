@@ -87,7 +87,7 @@ async def _apply_result(
     listing.title = payload.title
     listing.price = payload.price
     listing.quantity = payload.quantity
-    listing.last_synced_at = _now().isoformat()
+    listing.last_synced_at = _now()
 
     if result.status == SyncStatus.SUCCESS:
         listing.status = ListingState.PUBLISHED.value
@@ -140,14 +140,14 @@ async def _apply_result(
     else:
         listing.status = ListingState.RETRYING.value
         retry_at = _now() + timedelta(minutes=_backoff_minutes(listing.sync_attempts))
-        listing.next_sync_at = retry_at.isoformat()
+        listing.next_sync_at = retry_at
         await record_event(
             db, "marketplace_sync_failed", severity="error",
             message=f"{listing.platform} {operation} failed (attempt {listing.sync_attempts}/"
                     f"{max_attempts}): {result.message}",
             listing_id=listing.id, product_id=listing.product_id,
             payload={"platform": listing.platform, "operation": operation,
-                     "next_retry_at": listing.next_sync_at},
+                     "next_retry_at": retry_at.isoformat()},
         )
 
 
@@ -215,13 +215,12 @@ async def sync_all_active_products(db: AsyncSession, limit: int = 500) -> dict:
 
 async def retry_due_listings(db: AsyncSession, limit: int = 100) -> dict:
     """Re-sync listings whose backoff window has elapsed (run from Celery beat)."""
-    now_iso = _now().isoformat()
     rows = await db.execute(
         select(MarketplaceListing)
         .where(
             MarketplaceListing.status == ListingState.RETRYING.value,
             MarketplaceListing.next_sync_at.isnot(None),
-            MarketplaceListing.next_sync_at <= now_iso,
+            MarketplaceListing.next_sync_at <= _now(),
         )
         .limit(limit)
     )

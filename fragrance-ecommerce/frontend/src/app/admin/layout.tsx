@@ -30,19 +30,28 @@ const NAV = [
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  const { customer, token } = useAuthStore();
+  const { customer, token, fetchMe } = useAuthStore();
   const router = useRouter();
   const pathname = usePathname();
   const [failureCount, setFailureCount] = useState(0);
+  const [authOk, setAuthOk] = useState(false);
 
+  // The zustand store rehydrates asynchronously after a full page load, so
+  // `token` is briefly null even for a logged-in admin. Check localStorage
+  // directly inside the effect to avoid bouncing hard-refreshes to /login.
   useEffect(() => {
-    if (!token) { router.replace("/auth/login"); return; }
-    if (customer && !customer.is_admin) { router.replace("/"); }
+    const stored = typeof window !== "undefined" ? localStorage.getItem("aurevia_token") : null;
+    const effectiveToken = token || stored;
+    if (!effectiveToken) { router.replace("/auth/login"); return; }
+    if (customer && !customer.is_admin) { router.replace("/"); return; }
+    setAuthOk(true);
+    if (!customer) fetchMe();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [customer, token, router]);
 
   // Live failure badge: human-action backlog shown on every admin page.
   useEffect(() => {
-    if (!token) return;
+    if (!authOk) return;
     let cancelled = false;
     const poll = async () => {
       try {
@@ -59,9 +68,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     poll();
     const t = setInterval(poll, 60_000);
     return () => { cancelled = true; clearInterval(t); };
-  }, [token]);
+  }, [authOk]);
 
-  if (!token || (customer && !customer.is_admin)) return null;
+  if (!authOk) return null;
 
   return (
     <div className="min-h-screen bg-[#0f0f0f] flex">

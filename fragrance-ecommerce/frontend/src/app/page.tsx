@@ -87,14 +87,14 @@ export default async function HomePage() {
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 lg:gap-6">
             {[
-              { slug: "fragrances", label: "Fragrances", img: "https://images.unsplash.com/photo-1541643600914-78b084683601?w=600&q=80" },
-              { slug: "sneakers", label: "Sneakers", img: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600&q=80" },
-              { slug: "streetwear", label: "Streetwear", img: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=600&q=80" },
-              { slug: "designer-clothing", label: "Designer Clothing", img: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=600&q=80" },
-              { slug: "bags", label: "Bags", img: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=600&q=80" },
-              { slug: "watches", label: "Watches", img: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=600&q=80" },
-              { slug: "accessories", label: "Accessories", img: "https://images.unsplash.com/photo-1511499767150-a48a237f0083?w=600&q=80" },
-              { slug: "jewelry", label: "Jewelry", img: "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=600&q=80" },
+              { slug: "fragrances", label: "Fragrances", img: "/demo/cat-fragrances.jpg" },
+              { slug: "sneakers", label: "Sneakers", img: "/demo/cat-sneakers.jpg" },
+              { slug: "streetwear", label: "Streetwear", img: "/demo/cat-streetwear.jpg" },
+              { slug: "designer-clothing", label: "Designer Clothing", img: "/demo/cat-designer.jpg" },
+              { slug: "bags", label: "Bags", img: "/demo/cat-bags.jpg" },
+              { slug: "watches", label: "Watches", img: "/demo/cat-watches.jpg" },
+              { slug: "accessories", label: "Accessories", img: "/demo/cat-accessories.jpg" },
+              { slug: "jewelry", label: "Jewelry", img: "/demo/cat-jewelry.jpg" },
             ].map((cat) => (
               <Link
                 key={cat.slug}

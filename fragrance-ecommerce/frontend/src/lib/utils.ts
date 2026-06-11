@@ -15,14 +15,18 @@ export function formatDate(dateString: string): string {
 
 export const PRODUCT_PLACEHOLDER = "/placeholder-product.svg";
 
+function isUsableImage(url?: string): boolean {
+  // Absolute CDN URLs or root-relative paths served from public/.
+  return Boolean(url && (url.startsWith("http") || url.startsWith("/")));
+}
+
 export function hasRealImage(product: { images?: { url: string }[] }, index = 0): boolean {
-  const img = product.images?.[index]?.url;
-  return Boolean(img && img.startsWith("http"));
+  return isUsableImage(product.images?.[index]?.url);
 }
 
 export function getProductImage(product: { images?: { url: string }[] }, index = 0): string {
   const img = product.images?.[index]?.url;
-  if (img && img.startsWith("http")) return img;
+  if (isUsableImage(img)) return img as string;
   // No real image → branded silhouette placeholder. Never fake a product
   // photo with stock imagery: it destroys trust at checkout.
   return PRODUCT_PLACEHOLDER;

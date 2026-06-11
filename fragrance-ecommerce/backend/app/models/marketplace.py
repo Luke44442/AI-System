@@ -1,8 +1,9 @@
 from __future__ import annotations
 import uuid
+from datetime import datetime
 from decimal import Decimal
 from typing import List, Optional
-from sqlalchemy import Boolean, ForeignKey, Integer, JSON, Numeric, String, Text, UniqueConstraint
+from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, JSON, Numeric, String, Text, UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.models.base import BaseModel
@@ -47,8 +48,10 @@ class MarketplaceListing(BaseModel):
     quantity: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     platform_data: Mapped[Optional[dict]] = mapped_column(JSON, default=dict)
     sync_errors: Mapped[Optional[list]] = mapped_column(JSON, default=list)
-    last_synced_at: Mapped[Optional[str]] = mapped_column(String(50))
-    next_sync_at: Mapped[Optional[str]] = mapped_column(String(50))
+    # Real timestamps (the DB columns are TIMESTAMPTZ) — the retry sweep
+    # compares these against now() so they must not be strings.
+    last_synced_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
+    next_sync_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
     sync_error: Mapped[Optional[str]] = mapped_column(Text)
     sync_attempts: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     product: Mapped["Product"] = relationship("Product", back_populates="marketplace_listings")  # type: ignore[name-defined]  # noqa: F821
