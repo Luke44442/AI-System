@@ -2,17 +2,29 @@ import Link from "next/link";
 import Image from "next/image";
 import type { Metadata } from "next";
 import { productsApi, collectionsApi } from "@/lib/api";
+import { getProductImage, formatPrice } from "@/lib/utils";
 import ProductCard from "@/components/product/ProductCard";
 import NewsletterForm from "@/components/NewsletterForm";
 import RecommendationRow from "@/components/product/RecommendationRow";
 import type { Product, Collection } from "@/types";
 
 export const metadata: Metadata = {
-  title: "Aurevia — Luxury Fragrances",
-  description: "Authentic luxury fragrances from the world's finest houses. Free shipping on orders over $75.",
+  title: "Aurevia — Authentic Luxury, Intelligently Sourced",
+  description: "Authenticated luxury fragrances, sneakers, streetwear and designer pieces — priced below market, tracked to your door.",
 };
 
 export const revalidate = 3600;
+
+const CATEGORIES = [
+  { slug: "fragrances", label: "Fragrances", img: "/demo/cat-fragrances.jpg" },
+  { slug: "sneakers", label: "Sneakers", img: "/demo/cat-sneakers.jpg" },
+  { slug: "streetwear", label: "Streetwear", img: "/demo/cat-streetwear.jpg" },
+  { slug: "designer-clothing", label: "Designer", img: "/demo/cat-designer.jpg" },
+  { slug: "bags", label: "Bags", img: "/demo/cat-bags.jpg" },
+  { slug: "watches", label: "Watches", img: "/demo/cat-watches.jpg" },
+  { slug: "accessories", label: "Accessories", img: "/demo/cat-accessories.jpg" },
+  { slug: "jewelry", label: "Jewelry", img: "/demo/cat-jewelry.jpg" },
+];
 
 async function getHomeData() {
   try {
@@ -22,160 +34,197 @@ async function getHomeData() {
     ]);
     return { featuredProducts: featuredProducts.items, collections };
   } catch {
-    return { featuredProducts: [], collections: [] };
+    return { featuredProducts: [] as Product[], collections: [] as Collection[] };
   }
 }
 
 export default async function HomePage() {
   const { featuredProducts, collections } = await getHomeData();
+  const hero = featuredProducts[0];
 
   return (
     <>
-      {/* Hero */}
-      <section className="relative h-screen flex items-center justify-center overflow-hidden">
-        <div className="absolute inset-0 bg-obsidian">
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-obsidian/20 to-obsidian/60" />
+      {/* ── Hero ───────────────────────────────────────────────────────── */}
+      <section className="relative min-h-screen flex items-center overflow-hidden bg-obsidian">
+        {/* ambient gold glow */}
+        <div className="absolute inset-0 pointer-events-none" aria-hidden>
+          <div className="absolute -top-1/3 left-1/2 -translate-x-1/2 w-[900px] h-[900px] rounded-full bg-gold-500/[0.06] blur-3xl" />
         </div>
-        <div className="relative z-10 text-center text-white px-4">
-          <p className="section-subtitle text-gold-400 mb-6">Est. 2024 · Luxury Marketplace</p>
-          <h1 className="font-serif text-5xl md:text-7xl lg:text-8xl leading-none mb-8 text-white">
-            Luxury,<br />Curated
-          </h1>
-          <p className="text-lg md:text-xl text-gray-300 max-w-xl mx-auto mb-12 font-light leading-relaxed">
-            Authentic fragrances, sneakers, streetwear, and designer pieces from the world's finest houses — delivered to your door.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/products" className="btn-gold text-sm">
-              Shop All
-            </Link>
-            <Link href="/collections" className="btn-outline border-white text-white hover:bg-white hover:text-obsidian text-sm">
-              View Collections
-            </Link>
-          </div>
-        </div>
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-white/60">
-          <div className="w-px h-12 bg-white/30 animate-pulse" />
-          <span className="text-[10px] tracking-widest uppercase">Scroll</span>
-        </div>
-      </section>
 
-      {/* Trust Badges */}
-      <section className="bg-obsidian text-white py-6">
-        <div className="container-luxury">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
-            {[
-              { label: "Authentic", sub: "100% Genuine Products" },
-              { label: "Free Shipping", sub: "On Orders Over $75" },
-              { label: "Easy Returns", sub: "30-Day Return Policy" },
-              { label: "Secure Payment", sub: "Stripe Encrypted" },
-            ].map(({ label, sub }) => (
-              <div key={label} className="py-2">
-                <p className="text-xs tracking-widest uppercase text-gold-400 mb-1">{label}</p>
-                <p className="text-xs text-gray-400">{sub}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+        <div className="container-luxury relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center pt-24 pb-16">
+          <div className="animate-slide-up">
+            <p className="section-subtitle mb-6">Authenticated Resale Marketplace</p>
+            <h1 className="font-serif text-5xl md:text-6xl xl:text-7xl leading-[1.05] text-cream">
+              Authentic Luxury.
+              <br />
+              <span className="text-gold-500">Intelligently</span> Sourced.
+            </h1>
+            <p className="mt-8 text-base md:text-lg text-white/50 max-w-md font-light leading-relaxed">
+              Every piece verified at the source, priced against live market data,
+              and tracked from supplier to your door.
+            </p>
+            <div className="mt-10 flex flex-col sm:flex-row gap-4">
+              <Link href="/products" className="btn-gold text-center">Explore Collection</Link>
+              <Link href="/products?is_new_arrival=true" className="btn-outline text-center">View Latest Drops</Link>
+            </div>
 
-      {/* Shop by Category */}
-      <section className="py-20 bg-white">
-        <div className="container-luxury">
-          <div className="text-center mb-12">
-            <p className="section-subtitle text-gold-600 mb-3">Explore</p>
-            <h2 className="section-title">Shop by Category</h2>
+            {/* category quick-nav */}
+            <div className="mt-14 flex flex-wrap gap-x-6 gap-y-2">
+              {CATEGORIES.slice(0, 6).map((c) => (
+                <Link
+                  key={c.slug}
+                  href={`/category/${c.slug}`}
+                  className="text-[11px] tracking-[0.25em] uppercase text-white/40 hover:text-gold-500 transition-colors"
+                >
+                  {c.label}
+                </Link>
+              ))}
+            </div>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 lg:gap-6">
-            {[
-              { slug: "fragrances", label: "Fragrances", img: "/demo/cat-fragrances.jpg" },
-              { slug: "sneakers", label: "Sneakers", img: "/demo/cat-sneakers.jpg" },
-              { slug: "streetwear", label: "Streetwear", img: "/demo/cat-streetwear.jpg" },
-              { slug: "designer-clothing", label: "Designer Clothing", img: "/demo/cat-designer.jpg" },
-              { slug: "bags", label: "Bags", img: "/demo/cat-bags.jpg" },
-              { slug: "watches", label: "Watches", img: "/demo/cat-watches.jpg" },
-              { slug: "accessories", label: "Accessories", img: "/demo/cat-accessories.jpg" },
-              { slug: "jewelry", label: "Jewelry", img: "/demo/cat-jewelry.jpg" },
-            ].map((cat) => (
-              <Link
-                key={cat.slug}
-                href={`/category/${cat.slug}`}
-                className="group relative aspect-square overflow-hidden bg-obsidian flex items-end p-5"
-              >
+
+          {/* featured product stage */}
+          {hero && (
+            <Link href={`/products/${hero.slug}`} className="relative group animate-fade-in hidden lg:block">
+              <div className="relative aspect-[3/4] max-w-md ml-auto surface overflow-hidden">
                 <Image
-                  src={cat.img}
-                  alt={cat.label}
+                  src={getProductImage(hero)}
+                  alt={hero.name}
                   fill
-                  className="object-cover opacity-70 group-hover:opacity-50 group-hover:scale-105 transition-all duration-700"
+                  priority
+                  sizes="(max-width: 1024px) 0px, 40vw"
+                  className="object-cover transition-transform duration-[1.2s] group-hover:scale-[1.03]"
                 />
-                <span className="relative z-10 font-serif text-xl text-white">{cat.label}</span>
-              </Link>
-            ))}
-          </div>
+                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-obsidian/95 via-obsidian/60 to-transparent p-6 pt-16">
+                  <p className="text-[10px] tracking-[0.25em] uppercase text-gold-500">{hero.brand?.name}</p>
+                  <div className="flex items-end justify-between mt-1">
+                    <p className="font-serif text-2xl text-cream">{hero.name}</p>
+                    {hero.website_price && <p className="price text-xl">{formatPrice(hero.website_price)}</p>}
+                  </div>
+                  {hero.marketplace_price && hero.website_price && hero.marketplace_price > hero.website_price && (
+                    <p className="ticker-up text-[11px] mt-1">
+                      ▼ {(((hero.marketplace_price - hero.website_price) / hero.marketplace_price) * 100).toFixed(1)}% below market avg
+                    </p>
+                  )}
+                </div>
+              </div>
+            </Link>
+          )}
+        </div>
+
+        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-white/30" aria-hidden>
+          <div className="w-px h-10 bg-white/20 animate-pulse" />
+          <span className="text-[9px] tracking-[0.3em] uppercase">Scroll</span>
         </div>
       </section>
 
-      {/* Featured Products */}
+      {/* ── Assurance strip ────────────────────────────────────────────── */}
+      <section className="border-y border-white/[0.06] bg-charcoal-200">
+        <div className="container-luxury grid grid-cols-2 md:grid-cols-4 divide-x divide-white/[0.06]">
+          {[
+            { label: "Authenticated", sub: "Verified at the source" },
+            { label: "Below Market", sub: "Priced against live data" },
+            { label: "Fully Tracked", sub: "Supplier to doorstep" },
+            { label: "Secure Checkout", sub: "Stripe encrypted" },
+          ].map(({ label, sub }) => (
+            <div key={label} className="py-6 px-4 text-center">
+              <p className="text-[11px] tracking-[0.25em] uppercase text-gold-500">{label}</p>
+              <p className="text-xs text-white/40 mt-1">{sub}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ── Featured drops ─────────────────────────────────────────────── */}
       {featuredProducts.length > 0 && (
-        <section className="py-20 bg-cream">
+        <section className="py-20 bg-obsidian">
           <div className="container-luxury">
-            <div className="text-center mb-12">
-              <p className="section-subtitle text-gold-600 mb-3">Curated Selection</p>
-              <h2 className="section-title">Featured</h2>
+            <div className="flex items-end justify-between mb-10">
+              <div>
+                <p className="section-subtitle mb-3">Featured Drops</p>
+                <h2 className="section-title">Current Selection</h2>
+              </div>
+              <Link href="/products" className="hidden sm:block text-xs tracking-[0.25em] uppercase text-white/50 hover:text-gold-500 transition-colors">
+                View All →
+              </Link>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 lg:gap-6">
               {featuredProducts.slice(0, 8).map((product: Product) => (
                 <ProductCard key={product.id} product={product} />
               ))}
             </div>
-            <div className="text-center mt-12">
-              <Link href="/products" className="btn-outline">
-                Shop All
-              </Link>
-            </div>
           </div>
         </section>
       )}
 
-      {/* Trending Now */}
-      <section className="py-12 bg-cream">
+      {/* ── Shop by category ───────────────────────────────────────────── */}
+      <section className="py-20 bg-charcoal-200 border-y border-white/[0.06]">
+        <div className="container-luxury">
+          <div className="text-center mb-12">
+            <p className="section-subtitle mb-3">Explore</p>
+            <h2 className="section-title">Shop by Category</h2>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 lg:gap-4">
+            {CATEGORIES.map((cat) => (
+              <Link
+                key={cat.slug}
+                href={`/category/${cat.slug}`}
+                className="group relative aspect-square overflow-hidden bg-obsidian border border-white/[0.06] hover:border-gold-500/40 transition-colors flex items-end p-5"
+              >
+                <Image
+                  src={cat.img}
+                  alt={cat.label}
+                  fill
+                  sizes="(max-width: 768px) 50vw, 25vw"
+                  className="object-cover opacity-60 group-hover:opacity-40 group-hover:scale-[1.04] transition-all duration-700"
+                />
+                <span className="relative z-10 font-serif text-xl text-cream">{cat.label}</span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Trending ───────────────────────────────────────────────────── */}
+      <section className="py-12 bg-obsidian">
         <div className="container-luxury">
           <RecommendationRow
             title="Trending Now"
-            subtitle="What Aurevia shoppers are loving"
+            subtitle="What Aurevia collectors are watching"
             source={{ kind: "trending", limit: 8 }}
           />
         </div>
       </section>
 
-      {/* Collections */}
+      {/* ── Collections ────────────────────────────────────────────────── */}
       {collections.length > 0 && (
-        <section className="py-20 bg-white">
+        <section className="py-20 bg-charcoal-200 border-y border-white/[0.06]">
           <div className="container-luxury">
             <div className="text-center mb-12">
-              <p className="section-subtitle text-gold-600 mb-3">Themed Curation</p>
-              <h2 className="section-title">Our Collections</h2>
+              <p className="section-subtitle mb-3">Curated</p>
+              <h2 className="section-title">Collections</h2>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
               {collections.slice(0, 6).map((col: Collection) => (
                 <Link
                   key={col.id}
                   href={`/collections/${col.slug}`}
-                  className="group relative aspect-[4/3] overflow-hidden bg-obsidian flex items-end p-6"
+                  className="group relative aspect-[4/3] overflow-hidden bg-obsidian border border-white/[0.06] hover:border-gold-500/40 transition-colors flex items-end p-6"
                 >
                   {col.image_url && (
                     <Image
                       src={col.image_url}
                       alt={col.name}
                       fill
-                      className="object-cover opacity-60 group-hover:opacity-40 group-hover:scale-105 transition-all duration-700"
+                      sizes="(max-width: 768px) 100vw, 33vw"
+                      className="object-cover opacity-50 group-hover:opacity-35 group-hover:scale-[1.04] transition-all duration-700"
                     />
                   )}
-                  <div className="relative z-10 text-white">
-                    <p className="font-serif text-2xl mb-1">{col.name}</p>
+                  <div className="relative z-10">
+                    <p className="font-serif text-2xl text-cream mb-1">{col.name}</p>
                     {col.description && (
-                      <p className="text-xs text-gray-300 line-clamp-2">{col.description}</p>
+                      <p className="text-xs text-white/50 line-clamp-2">{col.description}</p>
                     )}
-                    <p className="text-xs tracking-widest uppercase text-gold-400 mt-3">Explore →</p>
+                    <p className="text-[10px] tracking-[0.3em] uppercase text-gold-500 mt-3">Explore →</p>
                   </div>
                 </Link>
               ))}
@@ -184,43 +233,41 @@ export default async function HomePage() {
         </section>
       )}
 
-      {/* Brand Promise */}
-      <section className="py-20 bg-cream-100">
-        <div className="container-luxury">
-          <div className="max-w-3xl mx-auto text-center">
-            <p className="section-subtitle text-gold-600 mb-6">Our Promise</p>
-            <h2 className="section-title mb-8">Every Bottle, Authenticated</h2>
-            <p className="text-gray-600 leading-relaxed mb-12">
-              At Aurevia, every piece is sourced from trusted partners and inspected before it ships.
-              From fragrances to sneakers to designer apparel, each item is verified for authenticity
-              so you can shop luxury with total confidence.
-            </p>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {[
-                { num: "5,000+", label: "Authenticated Products" },
-                { num: "60+", label: "Luxury Brands" },
-                { num: "98%", label: "Customer Satisfaction" },
-              ].map(({ num, label }) => (
-                <div key={label} className="text-center">
-                  <p className="font-serif text-4xl text-gold-500 mb-2">{num}</p>
-                  <p className="text-xs tracking-widest uppercase text-gray-500">{label}</p>
-                </div>
-              ))}
-            </div>
+      {/* ── Promise ────────────────────────────────────────────────────── */}
+      <section className="py-24 bg-obsidian">
+        <div className="container-luxury max-w-3xl mx-auto text-center">
+          <p className="section-subtitle mb-6">Our Standard</p>
+          <h2 className="section-title mb-8">Every Piece, Authenticated</h2>
+          <p className="text-white/50 leading-relaxed mb-14 font-light">
+            Aurevia sits between trusted suppliers and the open market. Each item is sourced from
+            verified partners, checked before it ships, and priced against live marketplace data —
+            so what you pay is grounded in what the market says it's worth.
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
+            {[
+              { num: "5,000+", label: "Authenticated Products" },
+              { num: "60+", label: "Luxury Brands" },
+              { num: "98%", label: "Customer Satisfaction" },
+            ].map(({ num, label }) => (
+              <div key={label}>
+                <p className="font-serif text-4xl text-gold-500 mb-2 tabular-nums">{num}</p>
+                <p className="text-[10px] tracking-[0.25em] uppercase text-white/40">{label}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* Newsletter */}
-      <section className="py-20 bg-obsidian text-white">
+      {/* ── Newsletter ─────────────────────────────────────────────────── */}
+      <section className="py-20 bg-charcoal-200 border-t border-white/[0.06]">
         <div className="container-luxury max-w-2xl mx-auto text-center">
-          <p className="section-subtitle text-gold-400 mb-4">Exclusive Access</p>
-          <h2 className="font-serif text-4xl text-white mb-4">Join the Inner Circle</h2>
-          <p className="text-gray-400 mb-8 text-sm leading-relaxed">
-            Be first to discover new arrivals, exclusive launches, and members-only discounts.
+          <p className="section-subtitle mb-4">Private Access</p>
+          <h2 className="font-serif text-4xl text-cream mb-4">Join the Inner Circle</h2>
+          <p className="text-white/40 mb-8 text-sm leading-relaxed">
+            New drops, price movements, and members-only releases — before anyone else.
           </p>
           <NewsletterForm />
-          <p className="text-xs text-gray-600 mt-4">No spam. Unsubscribe anytime.</p>
+          <p className="text-xs text-white/25 mt-4">No spam. Unsubscribe anytime.</p>
         </div>
       </section>
     </>

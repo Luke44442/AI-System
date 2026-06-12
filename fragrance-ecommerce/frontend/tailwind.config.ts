@@ -29,6 +29,14 @@ const config: Config = {
           200: "#0F0F0F",
           300: "#0A0A0A",
         },
+        charcoal: {
+          DEFAULT: "#161616",
+          50: "#1E1E1E",
+          100: "#161616",
+          200: "#121212",
+          300: "#0E0E0E",
+        },
+        champagne: "#E8D9A8",
         cream: {
           DEFAULT: "#FAF7F2",
           50: "#FDFCF9",

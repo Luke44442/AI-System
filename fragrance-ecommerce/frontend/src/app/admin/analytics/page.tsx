@@ -1,10 +1,12 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
+import Link from "next/link";
 import {
-  analyticsApi,
+  analyticsApi, systemApi, adminApi,
   type ProfitDashboard,
   type ProfitabilityRow,
   type PricingAlert,
+  type FailuresDashboard,
 } from "@/lib/api";
 import { ArrowPathIcon, CheckCircleIcon, ExclamationTriangleIcon } from "@heroicons/react/24/outline";
 
@@ -227,6 +229,8 @@ export default function AnalyticsDashboard() {
   const [dashboard, setDashboard] = useState<ProfitDashboard | null>(null);
   const [profitability, setProfitability] = useState<{ items: ProfitabilityRow[]; summary: any } | null>(null);
   const [alerts, setAlerts] = useState<PricingAlert[]>([]);
+  const [ops, setOps] = useState<FailuresDashboard | null>(null);
+  const [activeOrders, setActiveOrders] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
@@ -234,14 +238,18 @@ export default function AnalyticsDashboard() {
   const load = useCallback(async () => {
     setRefreshing(true);
     try {
-      const [dash, prof, alertsData] = await Promise.all([
+      const [dash, prof, alertsData, failures, processing] = await Promise.all([
         analyticsApi.dashboard().catch(() => null),
         analyticsApi.profitability({ limit: 100 }).catch(() => null),
         analyticsApi.pricingAlerts().catch(() => ({ items: [] })),
+        systemApi.failures().catch(() => null),
+        adminApi.orders({ status: "processing", page_size: 1 }).catch(() => null),
       ]);
       setDashboard(dash);
       setProfitability(prof);
       setAlerts(alertsData?.items ?? []);
+      setOps(failures);
+      setActiveOrders(processing?.total ?? null);
       setError(null);
     } catch (e: any) {
       setError("Could not load analytics. Check that the API is running.");
@@ -323,6 +331,39 @@ export default function AnalyticsDashboard() {
         />
       </div>
 
+      {/* Live operations — what the system is doing right now */}
+      {ops && (
+        <div className="mb-6 bg-[#141414] rounded-lg border border-[#1e1e1e]">
+          <div className="flex items-center justify-between px-6 pt-5">
+            <h2 className="text-xs uppercase tracking-widest text-gray-500">Live Operations</h2>
+            <span className="flex items-center gap-2 text-[11px]">
+              <span className={`w-2 h-2 rounded-full ${ops.healthy ? "bg-emerald-400" : "bg-red-500 animate-pulse"}`} />
+              <span className={ops.healthy ? "text-emerald-400" : "text-red-400"}>
+                {ops.healthy ? "All systems nominal" : "Attention required"}
+              </span>
+            </span>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-5 divide-x divide-[#1e1e1e] mt-4 border-t border-[#1e1e1e]">
+            {[
+              { label: "Active Orders", value: activeOrders ?? "—", href: "/admin/orders", tone: "text-white" },
+              { label: "Supplier Queue", value: ops.counts.supplier_queue_backlog, href: "/admin/supplier-queue",
+                tone: ops.counts.supplier_queue_backlog ? "text-amber-400" : "text-emerald-400" },
+              { label: "Failed Supplier", value: ops.counts.failed_supplier_orders, href: "/admin/supplier-queue",
+                tone: ops.counts.failed_supplier_orders ? "text-red-400" : "text-emerald-400" },
+              { label: "Listings Retrying", value: ops.counts.retrying_listings, href: "/admin/marketplace",
+                tone: ops.counts.retrying_listings ? "text-amber-400" : "text-emerald-400" },
+              { label: "Dead Letters", value: ops.counts.dead_letter_listings, href: "/admin/system",
+                tone: ops.counts.dead_letter_listings ? "text-red-400" : "text-emerald-400" },
+            ].map(({ label, value, href, tone }) => (
+              <Link key={label} href={href} className="px-5 py-4 hover:bg-white/[0.02] transition-colors">
+                <p className={`text-xl font-light tabular-nums ${tone}`}>{value}</p>
+                <p className="text-[10px] uppercase tracking-widest text-gray-600 mt-0.5">{label}</p>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Two-column layout */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-6">
         {/* Revenue trend — 2/3 width */}
@@ -367,7 +408,7 @@ export default function AnalyticsDashboard() {
         {/* Pricing alerts — 1/3 */}
         <div className="bg-[#141414] rounded-lg border border-[#1e1e1e] p-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xs uppercase tracking-widest text-gray-500">Pricing Alerts</h2>
+            <h2 className="text-xs uppercase tracking-widest text-gray-500">Market Intelligence</h2>
             {alerts.filter((a) => !a.is_resolved).length > 0 && (
               <span className="text-[10px] bg-amber-400/20 text-amber-400 px-2 py-0.5 rounded-full">
                 {alerts.filter((a) => !a.is_resolved).length} active

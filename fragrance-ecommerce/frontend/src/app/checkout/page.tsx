@@ -424,7 +424,37 @@ export default function CheckoutPage() {
                 </div>
               </div>
 
-              <div className="mt-6 space-y-2 text-xs text-obsidian-400">
+              {/* What happens next — order timeline preview */}
+              <div className="border-t border-obsidian-700 pt-4 mt-6">
+                <p className="text-[10px] tracking-[0.25em] uppercase text-obsidian-400 mb-3">After you order</p>
+                <ol className="space-y-0">
+                  {[
+                    ["Payment confirmed", "Instant"],
+                    ["Sourced & authenticated", "1–2 days"],
+                    ["Dispatched with tracking", "2–3 days"],
+                    ["Delivered to your door", "7–14 days"],
+                  ].map(([step, eta], i, arr) => (
+                    <li key={step} className="flex gap-3">
+                      <div className="flex flex-col items-center">
+                        <span className={`w-2 h-2 rounded-full mt-1.5 ${i === 0 ? "bg-gold-500" : "bg-obsidian-600"}`} />
+                        {i < arr.length - 1 && <span className="w-px flex-1 bg-obsidian-700" />}
+                      </div>
+                      <div className="pb-3 flex-1 flex justify-between gap-2">
+                        <span className="text-xs text-cream/80">{step}</span>
+                        <span className="text-[11px] text-obsidian-400 tabular-nums">{eta}</span>
+                      </div>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+
+              <div className="mt-4 space-y-2 text-xs text-obsidian-400">
+                <div className="flex items-center gap-2">
+                  <svg className="w-4 h-4 text-gold-500 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                  Authenticity guaranteed — verified before dispatch
+                </div>
                 <div className="flex items-center gap-2">
                   <svg className="w-4 h-4 text-gold-500 shrink-0" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />

@@ -80,10 +80,10 @@ function ProductsPageInner() {
 
   return (
     <div className="pt-20">
-      <div className="bg-cream-50 py-12 text-center">
-        <p className="section-subtitle text-gold-600 mb-3">Discover</p>
-        <h1 className="section-title">All Fragrances</h1>
-        <p className="text-gray-500 text-sm mt-3">{total.toLocaleString()} fragrances available</p>
+      <div className="bg-charcoal-200 border-b border-white/[0.06] py-12 text-center">
+        <p className="section-subtitle mb-3">Discover</p>
+        <h1 className="section-title">The Collection</h1>
+        <p className="text-white/40 text-sm mt-3 tabular-nums">{total.toLocaleString()} authenticated pieces available</p>
       </div>
 
       <div className="container-luxury py-8">
@@ -92,13 +92,13 @@ function ProductsPageInner() {
             onClick={() => setFilterOpen(!filterOpen)}
             className={cn(
               "flex items-center gap-2 text-sm border px-4 py-2 transition-colors",
-              filterOpen ? "bg-obsidian text-white border-obsidian" : "border-gray-300 hover:border-obsidian"
+              filterOpen ? "bg-gold-500 text-obsidian border-gold-500 font-medium" : "border-white/20 text-cream/80 hover:border-gold-500 hover:text-gold-500"
             )}
           >
             <FunnelIcon className="w-4 h-4" />
             Filters
             {activeFiltersCount > 0 && (
-              <span className="bg-gold-500 text-white text-[10px] rounded-full w-4 h-4 flex items-center justify-center">{activeFiltersCount}</span>
+              <span className="bg-obsidian text-gold-500 text-[10px] rounded-full w-4 h-4 flex items-center justify-center">{activeFiltersCount}</span>
             )}
           </button>
 
@@ -111,38 +111,38 @@ function ProductsPageInner() {
               params.set("sort_dir", dir);
               router.push(`/products?${params.toString()}`);
             }}
-            className="text-sm border border-gray-300 px-3 py-2 focus:outline-none focus:border-obsidian bg-white"
+            className="text-sm border border-white/20 px-3 py-2 focus:outline-none focus:border-gold-500 bg-charcoal-100 text-cream"
           >
             {SORT_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
           </select>
         </div>
 
         {filterOpen && (
-          <div className="border border-gray-200 p-6 mb-6 grid grid-cols-1 md:grid-cols-4 gap-6 bg-white">
+          <div className="surface p-6 mb-6 grid grid-cols-1 md:grid-cols-4 gap-6">
             <div>
-              <h4 className="text-xs tracking-widest uppercase mb-3 text-gray-500">Brand</h4>
+              <h4 className="text-xs tracking-widest uppercase mb-3 text-white/40">Brand</h4>
               <select
                 value={filters.brand_id || ""}
                 onChange={(e) => updateFilter("brand_id", e.target.value || undefined)}
-                className="w-full text-sm border border-gray-200 px-3 py-2 focus:outline-none focus:border-obsidian"
+                className="w-full text-sm border border-white/15 bg-charcoal-200 text-cream px-3 py-2 focus:outline-none focus:border-gold-500"
               >
                 <option value="">All Brands</option>
                 {brands.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
               </select>
             </div>
             <div>
-              <h4 className="text-xs tracking-widest uppercase mb-3 text-gray-500">Category</h4>
+              <h4 className="text-xs tracking-widest uppercase mb-3 text-white/40">Category</h4>
               <select
                 value={filters.category_id || ""}
                 onChange={(e) => updateFilter("category_id", e.target.value || undefined)}
-                className="w-full text-sm border border-gray-200 px-3 py-2 focus:outline-none focus:border-obsidian"
+                className="w-full text-sm border border-white/15 bg-charcoal-200 text-cream px-3 py-2 focus:outline-none focus:border-gold-500"
               >
                 <option value="">All Categories</option>
                 {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
             </div>
             <div>
-              <h4 className="text-xs tracking-widest uppercase mb-3 text-gray-500">Gender</h4>
+              <h4 className="text-xs tracking-widest uppercase mb-3 text-white/40">Gender</h4>
               <div className="flex flex-wrap gap-2">
                 {GENDERS.map(({ value, label }) => (
                   <button
@@ -150,7 +150,7 @@ function ProductsPageInner() {
                     onClick={() => updateFilter("gender", filters.gender === value ? undefined : value)}
                     className={cn(
                       "text-xs px-3 py-1.5 border transition-colors",
-                      filters.gender === value ? "bg-obsidian text-white border-obsidian" : "border-gray-200 hover:border-obsidian"
+                      filters.gender === value ? "bg-gold-500 text-obsidian border-gold-500 font-medium" : "border-white/15 text-cream/70 hover:border-gold-500 hover:text-gold-500"
                     )}
                   >
                     {label}
@@ -159,7 +159,7 @@ function ProductsPageInner() {
               </div>
             </div>
             <div>
-              <h4 className="text-xs tracking-widest uppercase mb-3 text-gray-500">Concentration</h4>
+              <h4 className="text-xs tracking-widest uppercase mb-3 text-white/40">Concentration</h4>
               <div className="flex flex-wrap gap-2">
                 {CONCENTRATIONS.map((c) => (
                   <button
@@ -167,7 +167,7 @@ function ProductsPageInner() {
                     onClick={() => updateFilter("concentration", filters.concentration === c.toLowerCase() ? undefined : c.toLowerCase())}
                     className={cn(
                       "text-xs px-3 py-1.5 border transition-colors",
-                      filters.concentration === c.toLowerCase() ? "bg-obsidian text-white border-obsidian" : "border-gray-200 hover:border-obsidian"
+                      filters.concentration === c.toLowerCase() ? "bg-gold-500 text-obsidian border-gold-500 font-medium" : "border-white/15 text-cream/70 hover:border-gold-500 hover:text-gold-500"
                     )}
                   >
                     {c}
@@ -188,7 +188,7 @@ function ProductsPageInner() {
                 onClick={() => updateFilter("page", String(p))}
                 className={cn(
                   "w-10 h-10 text-sm border transition-colors",
-                  filters.page === p ? "bg-obsidian text-white border-obsidian" : "border-gray-200 hover:border-obsidian"
+                  filters.page === p ? "bg-gold-500 text-obsidian border-gold-500 font-semibold" : "border-white/15 text-cream/70 hover:border-gold-500 hover:text-gold-500"
                 )}
               >
                 {p}

@@ -62,10 +62,10 @@ export default function RecommendationRow({ title, subtitle, load, source, hideW
   if (loading) {
     return (
       <section className="py-8">
-        <div className="h-5 w-48 bg-gray-200 rounded mb-6 animate-pulse" />
+        <div className="h-5 w-48 skeleton rounded mb-6" />
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="aspect-[3/4] bg-gray-100 rounded animate-pulse" />
+            <div key={i} className="aspect-[3/4] skeleton rounded" />
           ))}
         </div>
       </section>
@@ -77,8 +77,8 @@ export default function RecommendationRow({ title, subtitle, load, source, hideW
   return (
     <section className="py-8">
       <div className="mb-6">
-        <h2 className="font-serif text-2xl text-obsidian">{title}</h2>
-        {subtitle && <p className="text-sm text-gray-500 mt-1">{subtitle}</p>}
+        <h2 className="font-serif text-2xl text-cream">{title}</h2>
+        {subtitle && <p className="text-sm text-white/40 mt-1">{subtitle}</p>}
       </div>
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 lg:gap-6">
         {products.slice(0, 8).map((product) => (

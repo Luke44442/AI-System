@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Toaster } from "react-hot-toast";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
+import MobileNav from "@/components/layout/MobileNav";
 import CartDrawer from "@/components/cart/CartDrawer";
 import "./globals.css";
 
@@ -36,8 +37,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body>
         <Navbar />
-        <main className="min-h-screen">{children}</main>
+        {/* pb leaves room for the mobile bottom nav */}
+        <main className="min-h-screen pb-16 lg:pb-0">{children}</main>
         <Footer />
+        <MobileNav />
         <CartDrawer />
         <Toaster
           position="bottom-right"
